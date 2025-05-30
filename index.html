@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voxel World</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #87CEEB;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            pointer-events: none;
+        }
+        #minimap {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 5px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+<!--
+TODO:
+ - [.] Make two types of water layers. Make water surface shiny. Aligm subsurface water layers with blocks.
+ - [X] Add shadows back.
+ - [ ] Add detail to blocks.
+ - [X] Allow jumping even if not on the ground to allow 'flying'.
+ - [ ] Rotate minimap to align with direction of player.
+ - [ ] Add proper smoothing to spline function.
+ - [ ] Add houses.
+ - [ ] Add roads.
+ - [ ] Create house buildings (L-System?)
+ - [ ] Add terrain rating score for home building. 
+ - [ ] Add cloud layer
+ - [ ] Improve perlin noise function to make more natural terrain.
+ --> 
+
+
+    <div id="info">
+        Up/Down Arrows or W/S: Move forward/backward<br>
+        Left/Right Arrows: Rotate left/right<br>
+        A/D: Strafe left/right<br>
+        Mouse: Click to lock pointer OR drag to look around<br>
+        Spacebar: Jump
+    </div>
+    <canvas id="minimap" width="200" height="200"></canvas>
+    <div id="fps-counter" style="position: absolute; top: 10px; right: 10px; color: white; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; font-family: Arial, sans-serif; font-size: 14px; display: none;"></div>
+    <div id="player-info" style="position: absolute; bottom: 10px; left: 10px; color: white; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; font-family: monospace; font-size: 14px; display: none; white-space: pre;"></div>
+    <div id="debug-window" style="position: absolute; top: 50px; right: 10px; color: white; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 5px; font-family: monospace; font-size: 14px; display: none; min-width: 200px;"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="src/TerrainGenerator.js"></script>
+    <script src="src/CoordinateConverter.js"></script>
+    <script src="src/Physics.js"></script>
+    <script src="src/World.js"></script>
+    <script>
+        // Game variables
+        let scene, camera, renderer, world;
+        let player = {
+            position: { 
+                x: 0, 
+                y: 0, 
+                z: 5
+            },
+            rotation: { x: 0, y: 0 },
+            velocity: { x: 0, y: 0 },
+            speed: 0.4,
+            jumpVelocity: 0,
+            onGround: false,
+            height: 1.7,
+            eyeOffset: 0.2
+        };
+        
+        let keys = {};
+        let mouseX = 0, mouseY = 0;
+        let isPointerLocked = false;
+        
+        // FPS counter variables
+        let showFPS = false;
+        let fpsCounter = document.createElement('div');
+        let lastTime = performance.now();
+        let frameCount = 0;
+        
+        // Debug window
+        let showDebug = false;
+        let debugWindow = document.createElement('div');
+        debugWindow.style.position = 'absolute';
+        debugWindow.style.top = '50px';
+        debugWindow.style.right = '10px';
+        debugWindow.style.color = 'white';
+        debugWindow.style.backgroundColor = 'rgba(0,0,0,0.7)';
+        debugWindow.style.padding = '15px';
+        debugWindow.style.borderRadius = '5px';
+        debugWindow.style.fontFamily = 'monospace';
+        debugWindow.style.fontSize = '14px';
+        debugWindow.style.display = 'none';
+        debugWindow.style.whiteSpace = 'pre';
+        debugWindow.style.minWidth = '200px';
+        document.body.appendChild(debugWindow);
+        
+        // Player info display
+        let showPlayerInfo = false;
+        let playerInfo = document.createElement('div');
+        playerInfo.style.position = 'absolute';
+        playerInfo.style.bottom = '10px';
+        playerInfo.style.left = '10px';
+        playerInfo.style.color = 'white';
+        playerInfo.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        playerInfo.style.padding = '10px';
+        playerInfo.style.borderRadius = '5px';
+        playerInfo.style.fontFamily = 'monospace';
+        playerInfo.style.fontSize = '14px';
+        playerInfo.style.display = 'none';
+        playerInfo.style.whiteSpace = 'pre';
+        document.body.appendChild(playerInfo);
+        
+        // Minimap settings
+        const MINIMAP_SIZE = 200;  // Size of the minimap in pixels
+        const MINIMAP_SCALE = 2;   // How many world units per pixel
+        let showMinimap = true;    // Minimap visibility state
+        
+        // Style FPS counter
+        fpsCounter.style.position = 'absolute';
+        fpsCounter.style.top = '10px';
+        fpsCounter.style.right = '10px';
+        fpsCounter.style.color = 'white';
+        fpsCounter.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        fpsCounter.style.padding = '10px';
+        fpsCounter.style.borderRadius = '5px';
+        fpsCounter.style.fontFamily = 'Arial, sans-serif';
+        fpsCounter.style.fontSize = '14px';
+        fpsCounter.style.display = 'none';
+        fpsCounter.style.zIndex = '1000';
+        document.body.appendChild(fpsCounter);
+        
+        // World settings
+        const CHUNK_SIZE = 16;
+        const WORLD_HEIGHT = 8;
+        const RENDER_DISTANCE = 4;
+        const TREE_COUNT = 2000;
+        
+        // Input handling
+        function onKeyDown(event) {
+            keys[event.code] = true;
+            
+            // Toggle FPS display with 'f' key
+            if (event.code === 'KeyF') {
+                showFPS = !showFPS;
+                fpsCounter.style.display = showFPS ? 'block' : 'none';
+            }
+            
+            // Toggle minimap with 'm' key
+            if (event.code === 'KeyM') {
+                showMinimap = !showMinimap;
+                const minimap = document.getElementById('minimap');
+                minimap.style.display = showMinimap ? 'block' : 'none';
+            }
+
+            // Toggle player info with 'p' key
+            if (event.code === 'KeyP') {
+                showPlayerInfo = !showPlayerInfo;
+                playerInfo.style.display = showPlayerInfo ? 'block' : 'none';
+            }
+
+            // Toggle debug window with '~' key (Backquote)
+            if (event.code === 'Backquote') {
+                showDebug = !showDebug;
+                debugWindow.style.display = showDebug ? 'block' : 'none';
+            }
+
+            // Increase terrain amplitude with + or =
+            if (event.key === '+' || event.key === '=') {
+                TerrainGenerator.amplitude = Math.min(5, TerrainGenerator.amplitude + 0.1);
+                clearAndRegenerateWorld();
+            }
+
+            // Decrease terrain amplitude with - or _
+            if (event.key === '-' || event.key === '_') {
+                TerrainGenerator.amplitude = Math.max(0, TerrainGenerator.amplitude - 0.1);
+                clearAndRegenerateWorld();
+            }
+        }
+        
+        function onKeyUp(event) {
+            keys[event.code] = false;
+        }
+        
+        // Mouse movement handler with corrected axes
+        function onMouseMove(event) {
+            if (isPointerLocked) {
+                // Pointer locked mouse movement
+                player.rotation.y -= event.movementX * 0.002; // Reversed direction
+                player.rotation.x -= event.movementY * 0.002; // Up/down rotation stays the same
+            } else {
+                // Regular mouse drag movement
+                if (event.buttons === 1) { // Left mouse button is pressed
+                    player.rotation.y -= event.movementX * 0.005; // Reversed direction
+                    player.rotation.x -= event.movementY * 0.005;
+                }
+            }
+            
+            // Limit vertical look angle to prevent over-rotation
+            player.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, player.rotation.x));
+        }
+        
+        // Update player movement and physics with corrected coordinate system
+        function updatePlayer() {
+            // Reset velocity
+            player.velocity.x = 0;
+            player.velocity.y = 0;
+            
+            const moveSpeed = player.speed;
+            
+            // Handle forward/backward movement (W/S keys)
+            if (keys['ArrowUp'] || keys['KeyW']) {
+                player.velocity.y = -1;  // Reversed direction
+            }
+            if (keys['ArrowDown'] || keys['KeyS']) {
+                player.velocity.y = 1;   // Reversed direction
+            }
+            
+            // Handle strafing (A/D keys)
+            if (keys['KeyA']) {
+                player.velocity.x = -1;  // Left strafe stays the same
+            }
+            if (keys['KeyD']) {
+                player.velocity.x = 1;   // Right strafe stays the same
+            }
+            
+            // Arrow keys only affect Y rotation (left/right looking)
+            if (keys['ArrowLeft']) {
+                player.rotation.y += 0.06;  // Reversed direction
+            }
+            if (keys['ArrowRight']) {
+                player.rotation.y -= 0.06;  // Reversed direction
+            }
+            
+            // Apply movement if there is any velocity
+            if (player.velocity.x !== 0 || player.velocity.y !== 0) {
+                const movement = Physics.calculateMovement(
+                    player.position,
+                    player.velocity,
+                    player.rotation,
+                    moveSpeed
+                );
+                player.position.x = movement.x;
+                player.position.y = movement.y;
+            }
+            
+            // Jump
+            if (keys['Space']) { // && player.onGround  // Allow 'flying'
+                player.jumpVelocity = 0.3;
+                player.onGround = false;
+            }
+            
+            // Apply gravity and jumping
+            player.jumpVelocity = Physics.applyGravity(player.jumpVelocity);
+            player.position.z += player.jumpVelocity;
+            
+            // Ground collision
+            const groundHeight = TerrainGenerator.getTerrainHeight(
+                Math.floor(player.position.x),
+                Math.floor(player.position.y)
+            );
+            
+            if (Physics.checkCollision(player.position, groundHeight)) {
+                player.position.z = groundHeight + player.height;
+                player.jumpVelocity = 0;
+                player.onGround = true;
+            }
+            
+            // Update camera position and rotation using coordinate converter
+            const threePos = CoordinateConverter.worldToThree.position(player.position);
+            camera.position.set(threePos.x, threePos.y, threePos.z);
+            
+            camera.rotation.order = 'YXZ';
+            camera.rotation.x = player.rotation.x;
+            camera.rotation.y = CoordinateConverter.worldToThree.rotation(player.rotation).y;
+            camera.rotation.z = 0;
+            
+            // Update world chunks
+            world.update(player.position.x, player.position.y);
+        }
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // Modify the updateMinimap function to fix orientation
+        function updateMinimap() {
+            if (!showMinimap) return;  // Skip if minimap is hidden
+            
+            const canvas = document.getElementById('minimap');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear the canvas
+            ctx.clearRect(0, 0, MINIMAP_SIZE, MINIMAP_SIZE);
+            
+            // Calculate the range of world coordinates to show
+            const halfSize = (MINIMAP_SIZE * MINIMAP_SCALE) / 2;
+            const startX = Math.floor(player.position.x - halfSize);
+            const startY = Math.floor(player.position.y - halfSize);
+            const endX = Math.floor(player.position.x + halfSize);
+            const endY = Math.floor(player.position.y + halfSize);
+            
+            // Draw terrain heights
+            for (let worldX = startX; worldX < endX; worldX += MINIMAP_SCALE) {
+                for (let worldY = startY; worldY < endY; worldY += MINIMAP_SCALE) {
+                    const height = TerrainGenerator.getTerrainHeight(worldX, worldY);
+                    
+                    // Convert world coordinates to minimap coordinates
+                    const mapX = ((worldX - startX) / MINIMAP_SCALE);  // Removed flip
+                    const mapY = ((worldY - startY) / MINIMAP_SCALE);
+                    
+                    // Color based on height
+                    let color;
+                    if (height < 0) {
+                        // Water (darker blue for deeper)
+                        const depth = Math.max(0, -height);
+                        color = `rgb(0,0,${Math.min(255, 128 + depth * 8)})`;
+                    } else if (height < 2) {
+                        // Beach
+                        color = '#f4a460';
+                    } else if (height < 12) {
+                        // Grass
+                        color = '#4CAF50';
+                    } else if (height < 80) {
+                        // Mountain
+                        const intensity = Math.min(255, 100 + height * 2);
+                        color = `rgb(${intensity},${intensity},${intensity})`;
+                    } else {
+                        // Snow caps
+                        color = '#ffffff';
+                    }
+                    
+                    ctx.fillStyle = color;
+                    ctx.fillRect(mapX, mapY, MINIMAP_SCALE, MINIMAP_SCALE);
+                }
+            }
+            
+            // Draw player position (in center)
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.arc(MINIMAP_SIZE/2, MINIMAP_SIZE/2, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Main game loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Calculate FPS
+            frameCount++;
+            const currentTime = performance.now();
+            if (currentTime >= lastTime + 1000) {
+                fpsCounter.textContent = `FPS: ${frameCount}`;
+                frameCount = 0;
+                lastTime = currentTime;
+            }
+            
+            updatePlayer();
+            updateMinimap();
+
+            // Update player info display
+            if (showPlayerInfo) {
+                const threePos = CoordinateConverter.worldToThree.position(player.position);
+                const threeRot = CoordinateConverter.worldToThree.rotation(player.rotation);
+                
+                playerInfo.textContent = 
+`World Coordinates:
+  Position: (${player.position.x.toFixed(2)}, ${player.position.y.toFixed(2)}, ${player.position.z.toFixed(2)})
+  Rotation: (${(player.rotation.x * 180 / Math.PI).toFixed(1)}°, ${(player.rotation.y * 180 / Math.PI).toFixed(1)}°)
+  Velocity: (${player.velocity.x.toFixed(2)}, ${player.velocity.y.toFixed(2)})
+  Jump Velocity: ${player.jumpVelocity.toFixed(2)}
+  On Ground: ${player.onGround}
+  Terrain Amplitude: ${TerrainGenerator.amplitude.toFixed(2)}
+
+Three.js Coordinates:
+  Position: (${threePos.x.toFixed(2)}, ${threePos.y.toFixed(2)}, ${threePos.z.toFixed(2)})
+  Rotation: (${(threeRot.x * 180 / Math.PI).toFixed(1)}°, ${(threeRot.y * 180 / Math.PI).toFixed(1)}°)`;
+            }
+
+            // Update debug window
+            if (showDebug) {
+                const stats = world.getStats();
+                debugWindow.textContent = 
+`=== Debug Information ===
+
+World Stats:
+  Chunks:
+    Loaded: ${stats.loadedChunks}
+    Max possible: ${(RENDER_DISTANCE * 2 + 1) * (RENDER_DISTANCE * 2 + 1)}
+    Current chunk: (${stats.currentPlayerChunk.x}, ${stats.currentPlayerChunk.y})
+  
+  Terrain:
+    Highest point: ${stats.highestPoint.toFixed(1)}
+    Lowest point: ${stats.lowestPoint.toFixed(1)}
+    Total blocks: ${stats.totalBlocksRendered.toLocaleString()}
+    Water planes: ${stats.waterPlanesRendered}
+    Trees: ${stats.treesGenerated}
+    Amplitude: ${TerrainGenerator.amplitude.toFixed(2)}
+
+Performance:
+  Last chunk gen: ${stats.lastChunkGenTime.toFixed(1)}ms
+  Avg chunk gen: ${stats.averageChunkGenTime.toFixed(1)}ms
+  Est. memory: ${stats.memoryUsed.toFixed(1)} MB
+  Current FPS: ${frameCount}
+
+Player Physics:
+  Speed: ${player.speed}
+  Jump velocity: ${player.jumpVelocity.toFixed(3)}
+  On ground: ${player.onGround}
+  Movement vector: (${player.velocity.x.toFixed(2)}, ${player.velocity.y.toFixed(2)})
+
+Controls:
+  F: Toggle FPS
+  M: Toggle minimap
+  P: Toggle player info
+  ~: Toggle debug
+  + / -: Change terrain amplitude
+
+Press '~' to close`;
+            }
+            
+            renderer.render(scene, camera);
+        }
+
+        // Initialize the game
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x87CEEB, 50, 200);
+            
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(player.position.x, player.position.y, player.position.z);
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x87CEEB);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.body.appendChild(renderer.domElement);
+            
+            // Add lighting
+            const ambientLight = new THREE.AmbientLight(0x6c7cb5, 0.7);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+            directionalLight.position.set(50, 50, 25);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.camera.near = 0.5;
+            directionalLight.shadow.camera.far = 500;
+            directionalLight.shadow.camera.left = -100;
+            directionalLight.shadow.camera.right = 100;
+            directionalLight.shadow.camera.top = 100;
+            directionalLight.shadow.camera.bottom = -100;
+            scene.add(directionalLight);
+            
+            // Initialize world
+            world = new World(scene, CHUNK_SIZE, RENDER_DISTANCE);
+            
+            // Event listeners
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('click', () => {
+                renderer.domElement.requestPointerLock();
+            });
+            
+            document.addEventListener('pointerlockchange', () => {
+                isPointerLocked = document.pointerLockElement === renderer.domElement;
+            });
+            
+            window.addEventListener('resize', onWindowResize);
+            
+            // Start game loop
+            animate();
+        }
+        
+        // Start the game
+        init();
+
+        // Helper to clear all chunks and force world regen
+        function clearAndRegenerateWorld() {
+            for (const [key, chunk] of world.chunks) {
+                scene.remove(chunk);
+            }
+            world.chunks.clear();
+            world.stats.loadedChunks = 0;
+            world.stats.totalBlocksRendered = 0;
+            world.stats.waterPlanesRendered = 0;
+            world.stats.treesGenerated = 0;
+            world.stats.highestPoint = -Infinity;
+            world.stats.lowestPoint = Infinity;
+            world.update(player.position.x, player.position.y);
+        }
+    </script>
+</body>
+</html>
