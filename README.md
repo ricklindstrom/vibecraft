@@ -43,14 +43,14 @@ A browser-based voxel world generator inspired by Minecraft, built with Three.js
 
 ## TO DO
  - [ ] Make two types of water layers. Make water surface shiny. Aligm subsurface water layers with blocks.
- - [ ] Add shadows back.
+ - [X] Add shadows back.
  - [ ] Add detail to blocks.
  - [X] Allow jumping even if not on the ground to allow 'flying'.
  - [ ] Rotate minimap to align with direction of player.
- - [ ] Create houses.
  - [ ] Add proper smoothing to spline function.
  - [ ] Add houses.
- - [ ] Create house building L-System?
+ - [ ] Add roads.
+ - [ ] Create house buildings (L-System)?
  - [ ] Add terrain rating score for home building. 
  - [ ] Add cloud layer
  - [ ] Improve perlin noise function to make more natural terrain.
