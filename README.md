@@ -1,6 +1,8 @@
-# Voxel World
+# Vibe Craft
 
-A browser-based voxel world generator inspired by Minecraft, built with Three.js. Features infinite procedurally generated terrain with realistic water depth effects.
+A browser-based voxel world generator inspired by Minecraft, built with Three.js. Features infinite procedurally generated terrain.
+
+[Playable demo here] (https://ricklindstrom.github.io/vibecraft/)
 
 ## Features
 
@@ -17,11 +19,14 @@ A browser-based voxel world generator inspired by Minecraft, built with Three.js
   - A/D: Strafe left/right
   - Left/Right Arrows: Turn left/right
   - Spacebar: Jump
+  - +/-: Make terrain flatter/hillier
+  - M: Toggle Minimap
 - **Camera**:
   - Mouse: Click to lock pointer for looking around
   - Alternative: Drag mouse when pointer isn't locked
 - **Debug**:
   - F: Toggle FPS counter
+  - P: Toggle player details
   - ~: Open Debug panel
 
 ### Graphics
@@ -42,16 +47,20 @@ A browser-based voxel world generator inspired by Minecraft, built with Three.js
 - Three.js r128 (loaded from CDN)
 
 ## TO DO
- - [ ] Make two types of water layers. Make water surface shiny. Aligm subsurface water layers with blocks.
- - [X] Add shadows back.
- - [ ] Add detail to blocks.
+ - [X] Publish to a github 'page'. https://ricklindstrom.github.io/vibecraft/
+ - [X] Make a link on the readme linking to the playable page. https://ricklindstrom.github.io/vibecraft/
  - [X] Allow jumping even if not on the ground to allow 'flying'.
+ - [ ] Make a link on the html page linking to the github page https://github.com/ricklindstrom/vibecraft 
+ - [.] Make two types of water layers. Make water surface shiny. Properly aligm subsurface water layers.
+ - [ ] Fix shadow (They only work in the orginal chunk)
+ - [ ] Add detail to blocks.
  - [ ] Rotate minimap to align with direction of player.
  - [ ] Add proper smoothing to spline function.
  - [ ] Add houses.
+ - [ ] Add castles.
  - [ ] Add roads.
- - [ ] Create house buildings (L-System)?
- - [ ] Add terrain rating score for home building. 
+ - [ ] Create house building system (L-System)?
+ - [ ] Add terrain rating score for home building to identify good locations for building houses. (Flat near water.). 
  - [ ] Add cloud layer
  - [ ] Improve perlin noise function to make more natural terrain.
 
