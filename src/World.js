@@ -8,6 +8,31 @@ const BLOCK_TYPES = {
     LEAVES: 5
 };
 
+// Structure definition format
+const STRUCTURE_TYPES = {
+    TREE: 'tree',
+    HOUSE: 'house',
+    CAVE: 'cave',
+    RUIN: 'ruin'
+    // Add more structure types as needed
+};
+
+// Structure generation result format
+/**
+ * @typedef {Object} BlockPosition
+ * @property {number} x - World X coordinate
+ * @property {number} y - World Y coordinate
+ * @property {number} z - World Z coordinate
+ * @property {number} type - Block type from BLOCK_TYPES
+ */
+
+/**
+ * @typedef {Object} Structure
+ * @property {string} type - Structure type from STRUCTURE_TYPES
+ * @property {BlockPosition[]} blocks - Array of blocks making up the structure
+ * @property {Object} metadata - Additional structure-specific data
+ */
+
 class World {
     constructor(scene, chunkSize = 16, renderDistance = 3) {
         this.scene = scene;
@@ -15,12 +40,13 @@ class World {
         this.RENDER_DISTANCE = renderDistance;
         this.CLEAN_DISTANCE = renderDistance + 1;
         this.chunks = new Map();
+        this.chunkLODs = new Map(); // Track LOD level for each chunk
 
         // LOD settings - simplified to just distance checks
         this.LOD_LEVELS = {
-            FULL: { maxDistance: 2, treeChance: 1.0, waterDetail: 1 },
-            MEDIUM: { maxDistance: 4, treeChance: 0.5, waterDetail: 2 },
-            LOW: { maxDistance: 6, treeChance: 0.2, waterDetail: 4 }
+            FULL: { maxDistance: 2, treeChance: 1.0, waterDetail: 1, stoneChance: 0.9 },
+            MEDIUM: { maxDistance: 4, treeChance: 0.5, waterDetail: 2, stoneChance: 0.4 },
+            LOW: { maxDistance: 8, treeChance: 0.3, waterDetail: 4, stoneChance: 0.2 }
         };
 
         this.stats = {
@@ -115,12 +141,18 @@ class World {
 
     generateTreePositionsForChunk(chunkX, chunkY, lodLevel) {
         const chunkTrees = [];
-        const treesPerChunk = Math.floor(2000 / (this.RENDER_DISTANCE * this.RENDER_DISTANCE * 4));
+        const treesPerChunk = Math.floor(300 / (this.RENDER_DISTANCE * this.RENDER_DISTANCE * 4));
 
         const random = (x, y) => {
-            const a = x * 12345 + y * 67890;
-            const b = a << 13 ^ a;
-            return ((b * (b * b * 15731 + 789221) + 1376312589) & 0x7fffffff) / 0x7fffffff;
+            // Use smaller numbers to avoid overflow
+            const a = ((x * 1231) + (y * 5897)) % 123456789;
+            // Mix the bits using XOR and shifts
+            let b = a;
+            b = (b ^ (b << 13)) & 0x7fffffff;
+            b = (b ^ (b >> 17)) & 0x7fffffff;
+            b = (b ^ (b << 5)) & 0x7fffffff;
+            // Normalize to 0-1 range
+            return b / 0x7fffffff;
         };
 
         for (let i = 0; i < treesPerChunk; i++) {
@@ -141,87 +173,52 @@ class World {
     }
 
     generateTreesInChunk(chunkGroup, chunkX, chunkY, instanceCounts, blockPositions, chunkTrees) {
-        const treeBlockCounts = new Map();
-        const treeBlockPositions = new Map();
+        const treeStructures = chunkTrees.map(tree => {
+            const blocks = [];
+            const trunkHeight = 4 + Math.floor(Math.random() * 3);
 
-        chunkTrees.forEach(tree => {
-            const localX = tree.x - chunkX * this.CHUNK_SIZE;
-            const localY = tree.y - chunkY * this.CHUNK_SIZE;
+            // Add trunk blocks
+            for (let z = 0; z < trunkHeight; z++) {
+                blocks.push({
+                    x: tree.x,
+                    y: tree.y,
+                    z: tree.groundHeight + 1 + z,
+                    type: BLOCK_TYPES.WOOD
+                });
+            }
 
-            if (localX >= 0 && localX < this.CHUNK_SIZE && localY >= 0 && localY < this.CHUNK_SIZE) {
-                const trunkHeight = 4 + Math.floor(Math.random() * 3);
+            // Add leaves
+            const leavesBaseZ = tree.groundHeight + 1 + trunkHeight;
+            for (let dx = -2; dx <= 2; dx++) {
+                for (let dy = -2; dy <= 2; dy++) {
+                    for (let dz = -1; dz <= 1; dz++) {
+                        if (Math.abs(dx) === 2 && Math.abs(dy) === 2) continue;
+                        if (dz === -1 && (Math.abs(dx) === 2 || Math.abs(dy) === 2)) continue;
 
-                // Add trunk blocks
-                if (!treeBlockCounts.has(BLOCK_TYPES.WOOD)) {
-                    treeBlockCounts.set(BLOCK_TYPES.WOOD, 0);
-                    treeBlockPositions.set(BLOCK_TYPES.WOOD, []);
-                }
-
-                for (let z = 0; z < trunkHeight; z++) {
-                    const worldPos = {
-                        x: tree.x,
-                        y: tree.y,
-                        z: tree.groundHeight + 1 + z
-                    };
-                    const threePos = CoordinateConverter.worldToThree.position(worldPos);
-                    treeBlockPositions.get(BLOCK_TYPES.WOOD).push(threePos);
-                    treeBlockCounts.set(BLOCK_TYPES.WOOD, treeBlockCounts.get(BLOCK_TYPES.WOOD) + 1);
-                }
-
-                // Add leaves
-                if (!treeBlockCounts.has(BLOCK_TYPES.LEAVES)) {
-                    treeBlockCounts.set(BLOCK_TYPES.LEAVES, 0);
-                    treeBlockPositions.set(BLOCK_TYPES.LEAVES, []);
-                }
-
-                const leavesBaseZ = tree.groundHeight + 1 + trunkHeight;
-                for (let dx = -2; dx <= 2; dx++) {
-                    for (let dy = -2; dy <= 2; dy++) {
-                        for (let dz = -1; dz <= 1; dz++) {
-                            if (Math.abs(dx) === 2 && Math.abs(dy) === 2) continue;
-                            if (dz === -1 && (Math.abs(dx) === 2 || Math.abs(dy) === 2)) continue;
-
-                            const worldPos = {
-                                x: tree.x + dx,
-                                y: tree.y + dy,
-                                z: leavesBaseZ + dz
-                            };
-                            const threePos = CoordinateConverter.worldToThree.position(worldPos);
-                            treeBlockPositions.get(BLOCK_TYPES.LEAVES).push(threePos);
-                            treeBlockCounts.set(BLOCK_TYPES.LEAVES, treeBlockCounts.get(BLOCK_TYPES.LEAVES) + 1);
-                        }
+                        blocks.push({
+                            x: tree.x + dx,
+                            y: tree.y + dy,
+                            z: leavesBaseZ + dz,
+                            type: BLOCK_TYPES.LEAVES
+                        });
                     }
                 }
             }
+
+            return {
+                type: STRUCTURE_TYPES.TREE,
+                blocks: blocks,
+                metadata: {
+                    height: trunkHeight,
+                    groundHeight: tree.groundHeight
+                }
+            };
         });
 
-        // Create instanced meshes for tree blocks
-        for (const [blockType, count] of treeBlockCounts) {
-            if (count > 0) {
-                const material = Array.isArray(this.materials[blockType])
-                    ? this.materials[blockType]
-                    : Array(6).fill(this.materials[blockType]);
-
-                const instancedMesh = new THREE.InstancedMesh(
-                    this.blockGeometry,
-                    material,
-                    count
-                );
-                instancedMesh.castShadow = true;
-                instancedMesh.receiveShadow = true;
-
-                let instanceIndex = 0;
-                for (const pos of treeBlockPositions.get(blockType)) {
-                    this.position.set(pos.x, pos.y, pos.z);
-                    this.matrix.compose(this.position, this.quaternion, this.scale);
-                    instancedMesh.setMatrixAt(instanceIndex, this.matrix);
-                    instanceIndex++;
-                }
-
-                instancedMesh.instanceMatrix.needsUpdate = true;
-                chunkGroup.add(instancedMesh);
-            }
-        }
+        // Generate all trees using the new system
+        treeStructures.forEach(structure => {
+            this.generateStructure(structure, chunkGroup);
+        });
     }
 
     getLODLevel(distance) {
@@ -253,11 +250,22 @@ class World {
     generateChunk(chunkX, chunkY, playerX, playerY) {
         const startTime = performance.now();
         const chunkKey = `${chunkX},${chunkY}`;
-        if (this.chunks.has(chunkKey)) return;
-
+        
         // Calculate LOD level based on actual distance to player
         const distance = this.getChunkDistance(chunkX, chunkY, playerX, playerY);
         const lodLevel = this.getLODLevel(distance);
+
+        // Check if chunk exists and needs LOD update
+        if (this.chunks.has(chunkKey)) {
+            const currentLOD = this.chunkLODs.get(chunkKey);
+            if (currentLOD === lodLevel) {
+                return; // Same LOD level, no update needed
+            }
+            // Different LOD level, remove old chunk
+            this.scene.remove(this.chunks.get(chunkKey));
+            this.chunks.delete(chunkKey);
+            this.chunkLODs.delete(chunkKey);
+        }
 
         const chunkGroup = new THREE.Group();
         const instanceCounts = new Map();
@@ -319,8 +327,8 @@ class World {
                 const zStep = (lodLevel.maxDistance <= this.LOD_LEVELS.FULL.maxDistance) ? 1 : 1;
                 
                 for (let z = bottomZ; z <= startZ; z += zStep) {
-                    blockCount++;
                     let blockType;
+                    let shouldRender = true;
 
                     if (height >= 0) {
                         if (z === startZ) {
@@ -329,24 +337,31 @@ class World {
                             blockType = BLOCK_TYPES.DIRT;
                         } else {
                             blockType = BLOCK_TYPES.STONE;
+                            // Apply stone chance based on LOD
+                            shouldRender = Math.random() < lodLevel.stoneChance;
                         }
                     } else {
                         if(z === startZ) {
                             blockType = BLOCK_TYPES.SAND;
                         } else {
                             blockType = BLOCK_TYPES.STONE;
+                            // Apply stone chance based on LOD for underwater stones too
+                            shouldRender = Math.random() < lodLevel.stoneChance;
                         }
                     }
 
-                    if (!instanceCounts.has(blockType)) {
-                        instanceCounts.set(blockType, 0);
-                        blockPositions.set(blockType, []);
-                    }
+                    if (shouldRender) {
+                        blockCount++;
+                        if (!instanceCounts.has(blockType)) {
+                            instanceCounts.set(blockType, 0);
+                            blockPositions.set(blockType, []);
+                        }
 
-                    const worldPos = { x: worldX, y: worldY, z: z };
-                    const threePos = CoordinateConverter.worldToThree.position(worldPos);
-                    blockPositions.get(blockType).push(threePos);
-                    instanceCounts.set(blockType, instanceCounts.get(blockType) + 1);
+                        const worldPos = { x: worldX, y: worldY, z: z };
+                        const threePos = CoordinateConverter.worldToThree.position(worldPos);
+                        blockPositions.get(blockType).push(threePos);
+                        instanceCounts.set(blockType, instanceCounts.get(blockType) + 1);
+                    }
                 }
             }
         }
@@ -391,6 +406,7 @@ class World {
         this.generateTreesInChunk(chunkGroup, chunkX, chunkY, instanceCounts, blockPositions, chunkTrees);
         
         this.chunks.set(chunkKey, chunkGroup);
+        this.chunkLODs.set(chunkKey, lodLevel); // Store the LOD level
         this.scene.add(chunkGroup);
 
         // Update statistics
@@ -423,10 +439,17 @@ class World {
         
         this.stats.currentPlayerChunk = { x: playerChunkX, y: playerChunkY };
         
-        // Generate or remove chunks based on render distance
+        // Check all existing chunks for LOD updates and generate new chunks
         for (let x = playerChunkX - this.RENDER_DISTANCE; x <= playerChunkX + this.RENDER_DISTANCE; x++) {
             for (let y = playerChunkY - this.RENDER_DISTANCE; y <= playerChunkY + this.RENDER_DISTANCE; y++) {
-                this.generateChunk(x, y, playerX, playerY);  // Pass actual player coordinates
+                const distance = this.getChunkDistance(x, y, playerX, playerY);
+                const newLodLevel = this.getLODLevel(distance);
+                const chunkKey = `${x},${y}`;
+                
+                // If chunk exists but LOD would be different, or chunk doesn't exist
+                if (!this.chunks.has(chunkKey) || this.chunkLODs.get(chunkKey) !== newLodLevel) {
+                    this.generateChunk(x, y, playerX, playerY);
+                }
             }
         }
 
@@ -437,6 +460,7 @@ class World {
                 Math.abs(chunkY - playerChunkY) > this.CLEAN_DISTANCE) {
                 this.scene.remove(chunk);
                 this.chunks.delete(key);
+                this.chunkLODs.delete(key); // Clean up LOD tracking
                 this.stats.loadedChunks = this.chunks.size;
             }
         }
@@ -444,6 +468,67 @@ class World {
 
     getStats() {
         return this.stats;
+    }
+
+    /**
+     * Generates a structure in the world from a collection of block positions
+     * @param {Structure} structure - The structure to generate
+     * @param {THREE.Group} targetGroup - The group to add the structure to
+     * @returns {Map<number, THREE.InstancedMesh>} Map of block types to their instance meshes
+     */
+    generateStructure(structure, targetGroup) {
+        const blockCounts = new Map();
+        const blockPositions = new Map();
+
+        // Count blocks by type and collect positions
+        for (const block of structure.blocks) {
+            if (!blockCounts.has(block.type)) {
+                blockCounts.set(block.type, 0);
+                blockPositions.set(block.type, []);
+            }
+            
+            const worldPos = {
+                x: block.x,
+                y: block.y,
+                z: block.z
+            };
+            const threePos = CoordinateConverter.worldToThree.position(worldPos);
+            blockPositions.get(block.type).push(threePos);
+            blockCounts.set(block.type, blockCounts.get(block.type) + 1);
+        }
+
+        const instancedMeshes = new Map();
+
+        // Create instanced meshes for each block type
+        for (const [blockType, count] of blockCounts) {
+            if (count > 0) {
+                const material = Array.isArray(this.materials[blockType])
+                    ? this.materials[blockType]
+                    : Array(6).fill(this.materials[blockType]);
+
+                const instancedMesh = new THREE.InstancedMesh(
+                    this.blockGeometry,
+                    material,
+                    count
+                );
+                instancedMesh.castShadow = true;
+                instancedMesh.receiveShadow = true;
+
+                let instanceIndex = 0;
+                for (const pos of blockPositions.get(blockType)) {
+                    this.position.set(pos.x, pos.y, pos.z);
+                    this.matrix.compose(this.position, this.quaternion, this.scale);
+                    instancedMesh.setMatrixAt(instanceIndex, this.matrix);
+                    instanceIndex++;
+                }
+
+                instancedMesh.instanceMatrix.needsUpdate = true;
+                targetGroup.add(instancedMesh);
+                instancedMeshes.set(blockType, instancedMesh);
+            }
+        }
+
+        return instancedMeshes;
     }
 }
 
