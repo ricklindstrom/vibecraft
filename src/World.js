@@ -15,6 +15,14 @@ class World {
         this.RENDER_DISTANCE = renderDistance;
         this.CLEAN_DISTANCE = renderDistance + 1;
         this.chunks = new Map();
+
+        // LOD settings - simplified to just distance checks
+        this.LOD_LEVELS = {
+            FULL: { maxDistance: 2, treeChance: 1.0, waterDetail: 1 },
+            MEDIUM: { maxDistance: 4, treeChance: 0.5, waterDetail: 2 },
+            LOW: { maxDistance: 6, treeChance: 0.2, waterDetail: 4 }
+        };
+
         this.stats = {
             loadedChunks: 0,
             totalBlocksRendered: 0,
@@ -105,7 +113,7 @@ class World {
         };
     }
 
-    generateTreePositionsForChunk(chunkX, chunkY) {
+    generateTreePositionsForChunk(chunkX, chunkY, lodLevel) {
         const chunkTrees = [];
         const treesPerChunk = Math.floor(2000 / (this.RENDER_DISTANCE * this.RENDER_DISTANCE * 4));
 
@@ -123,7 +131,8 @@ class World {
             const worldY = chunkY * this.CHUNK_SIZE + localY;
             const height = TerrainGenerator.getTerrainHeight(worldX, worldY);
 
-            if (height > 0 && random(worldX, worldY) < 0.7) {
+            // Apply LOD-based tree chance
+            if (height > 0 && random(worldX, worldY) < lodLevel.treeChance) {
                 chunkTrees.push({ x: worldX, y: worldY, groundHeight: height });
             }
         }
@@ -215,10 +224,40 @@ class World {
         }
     }
 
-    generateChunk(chunkX, chunkY) {
+    getLODLevel(distance) {
+        if (distance <= this.LOD_LEVELS.FULL.maxDistance) return this.LOD_LEVELS.FULL;
+        if (distance <= this.LOD_LEVELS.MEDIUM.maxDistance) return this.LOD_LEVELS.MEDIUM;
+        return this.LOD_LEVELS.LOW;
+    }
+
+    getChunkDistance(chunkX, chunkY, playerX, playerY) {
+        // Convert player position to world coordinates if they're chunk coordinates
+        const playerWorldX = typeof playerX === 'number' ? playerX : playerX * this.CHUNK_SIZE;
+        const playerWorldY = typeof playerY === 'number' ? playerY : playerY * this.CHUNK_SIZE;
+
+        // Calculate chunk bounds
+        const chunkWorldX = chunkX * this.CHUNK_SIZE;
+        const chunkWorldY = chunkY * this.CHUNK_SIZE;
+        
+        // Find closest point in chunk to player
+        const closestX = Math.max(chunkWorldX, Math.min(chunkWorldX + this.CHUNK_SIZE, playerWorldX));
+        const closestY = Math.max(chunkWorldY, Math.min(chunkWorldY + this.CHUNK_SIZE, playerWorldY));
+        
+        // Calculate actual distance to closest point
+        return Math.sqrt(
+            Math.pow(closestX - playerWorldX, 2) + 
+            Math.pow(closestY - playerWorldY, 2)
+        ) / this.CHUNK_SIZE; // Convert to chunk units
+    }
+
+    generateChunk(chunkX, chunkY, playerX, playerY) {
         const startTime = performance.now();
         const chunkKey = `${chunkX},${chunkY}`;
         if (this.chunks.has(chunkKey)) return;
+
+        // Calculate LOD level based on actual distance to player
+        const distance = this.getChunkDistance(chunkX, chunkY, playerX, playerY);
+        const lodLevel = this.getLODLevel(distance);
 
         const chunkGroup = new THREE.Group();
         const instanceCounts = new Map();
@@ -246,8 +285,8 @@ class World {
 
         // Add water planes if needed
         if (minHeight < 0) {
-            for (let depth = 0; depth >= minHeight; depth--) {
-                // Use shiny surface material only for the topmost water layer
+            const skipFactor = lodLevel.waterDetail;
+            for (let depth = 0; depth >= minHeight; depth -= skipFactor) {
                 const isSurface = (depth === 0);
                 const waterPlane = new THREE.Mesh(
                     this.waterGeometry,
@@ -276,7 +315,10 @@ class World {
                 const startZ = Math.floor(height);
                 const bottomZ = Math.min(-5, startZ);
                 
-                for (let z = bottomZ; z <= startZ; z++) {
+                // Simple distance-based LOD
+                const zStep = (lodLevel.maxDistance <= this.LOD_LEVELS.FULL.maxDistance) ? 1 : 1;
+                
+                for (let z = bottomZ; z <= startZ; z += zStep) {
                     blockCount++;
                     let blockType;
 
@@ -321,8 +363,15 @@ class World {
                     material,
                     count
                 );
-                instancedMesh.castShadow = true;
-                instancedMesh.receiveShadow = true;
+                
+                // Adjust shadow settings based on LOD
+                if (lodLevel.maxDistance <= this.LOD_LEVELS.MEDIUM.maxDistance) {
+                    instancedMesh.castShadow = true;
+                    instancedMesh.receiveShadow = true;
+                } else {
+                    instancedMesh.castShadow = false;
+                    instancedMesh.receiveShadow = true;
+                }
 
                 let instanceIndex = 0;
                 for (const pos of blockPositions.get(blockType)) {
@@ -337,8 +386,8 @@ class World {
             }
         }
 
-        // Generate trees
-        const chunkTrees = this.generateTreePositionsForChunk(chunkX, chunkY);
+        // Generate trees with LOD-based density
+        const chunkTrees = this.generateTreePositionsForChunk(chunkX, chunkY, lodLevel);
         this.generateTreesInChunk(chunkGroup, chunkX, chunkY, instanceCounts, blockPositions, chunkTrees);
         
         this.chunks.set(chunkKey, chunkGroup);
@@ -356,19 +405,16 @@ class World {
         
         // Calculate moving average of chunk generation time
         this.stats.chunkGenTimeHistory.push(genTime);
-        if (this.stats.chunkGenTimeHistory.length > 10) {
+        if (this.stats.chunkGenTimeHistory.length > 50) {
             this.stats.chunkGenTimeHistory.shift();
         }
-        this.stats.averageChunkGenTime = this.stats.chunkGenTimeHistory.reduce((a, b) => a + b, 0) / 
-                                       this.stats.chunkGenTimeHistory.length;
-
-        // Estimate memory usage (rough approximation)
-        const BYTES_PER_BLOCK = 32; // Rough estimate including position, material refs, etc.
-        const BYTES_PER_WATER = 128; // Water planes are more complex
-        const BYTES_PER_TREE = 256; // Trees have multiple blocks and leaves
-        this.stats.memoryUsed = (this.stats.totalBlocksRendered * BYTES_PER_BLOCK + 
-                                this.stats.waterPlanesRendered * BYTES_PER_WATER +
-                                this.stats.treesGenerated * BYTES_PER_TREE) / (1024 * 1024); // Convert to MB
+        this.stats.averageChunkGenTime = this.stats.chunkGenTimeHistory.reduce((a, b) => a + b, 0) 
+            / this.stats.chunkGenTimeHistory.length;
+            
+        // Estimate memory usage (very rough approximation)
+        const geometrySize = blockCount * 0.5; // KB per block
+        const textureSize = blockCount * 0.1; // KB per block
+        this.stats.memoryUsed = (geometrySize + textureSize) / 1024; // Convert to MB
     }
 
     update(playerX, playerY) {
@@ -380,11 +426,11 @@ class World {
         // Generate or remove chunks based on render distance
         for (let x = playerChunkX - this.RENDER_DISTANCE; x <= playerChunkX + this.RENDER_DISTANCE; x++) {
             for (let y = playerChunkY - this.RENDER_DISTANCE; y <= playerChunkY + this.RENDER_DISTANCE; y++) {
-                this.generateChunk(x, y);
+                this.generateChunk(x, y, playerX, playerY);  // Pass actual player coordinates
             }
         }
 
-        // Optional: Remove chunks that are too far away
+        // Remove chunks that are too far away
         for (const [key, chunk] of this.chunks) {
             const [chunkX, chunkY] = key.split(',').map(Number);
             if (Math.abs(chunkX - playerChunkX) > this.CLEAN_DISTANCE ||

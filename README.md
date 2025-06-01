@@ -1,10 +1,12 @@
 # Vibe Craft
 
-A browser-based voxel world generator inspired by Minecraft, built with Three.js. Features infinite procedurally generated terrain.
+A vibe-coded browser-based minecraft-inspired world generator playground. Built with Three.js. Features infinite procedurally generated terrain.
 
 [Playable demo here](https://ricklindstrom.github.io/vibecraft/)
 
 ## Features
+
+![Screenshot](images/screenshot-vibecraft-1.png)
 
 ### World Generation
 - Infinite procedurally generated terrain using multi-octave noise
@@ -50,10 +52,11 @@ A browser-based voxel world generator inspired by Minecraft, built with Three.js
  - [X] Publish to a github 'page'. https://ricklindstrom.github.io/vibecraft/
  - [X] Make a link on the readme linking to the playable page. https://ricklindstrom.github.io/vibecraft/
  - [X] Allow jumping even if not on the ground to allow 'flying'.
- - [ ] Add screenshot and logo to README
- - [ ] Make a link on the html page linking to the github page https://github.com/ricklindstrom/vibecraft 
+ - [X] Add screenshot to README
+ - [X] Make a link on the html page linking to the github page https://github.com/ricklindstrom/vibecraft 
  - [.] Make two types of water layers. Make water surface shiny. Properly aligm subsurface water layers.
- - [ ] Fix shadow (They only work in the orginal chunk)
+ - [X] Fix shadow
+ - [X] Implement level of detail (LOD)
  - [ ] Add detail to blocks.
  - [ ] Rotate minimap to align with direction of player.
  - [ ] Add proper smoothing to spline function.

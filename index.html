@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voxel World</title>
+    <title>VibeCraft</title>
     <style>
         body {
             margin: 0;
@@ -24,7 +24,38 @@
             padding: 10px;
             border-radius: 5px;
             font-size: 14px;
-            pointer-events: none;
+            cursor: pointer;
+            transition: all 0.3s ease-out;
+        }
+        #info.collapsed {
+            max-height: 20px;
+            overflow: hidden;
+        }
+        #info .full-help {
+            margin-top: 10px;
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+        #info.collapsed .full-help {
+            opacity: 0;
+        }
+        #info-toggle {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0,0,0,0.5);
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 1;
+            border: none;
+            outline: none;
+            transition: background-color 0.3s;
+        }
+        #info-toggle:hover {
+            background: rgba(0,0,0,0.7);
         }
         #minimap {
             position: absolute;
@@ -37,20 +68,26 @@
     </style>
 </head>
 <body>
-    <div id="info">
-        Up/Down Arrows or W/S: Move forward/backward<br>
-        Left/Right Arrows: Rotate left/right<br>
-        A/D: Strafe left/right<br>
-        Mouse: Click to lock pointer OR drag to look around<br>
-        Spacebar: Jump (Fly)<br>
-        -/+: Make Flatter/Hillier<br>
-        M: Toggle Minimap<br>
-        ~: Toggle Debug panel<br>
+    <div id="info" class="collapsed">
+        ?: Help
+        <div class="full-help">
+            Up/Down Arrows or W/S: Move forward/backward<br>
+            Left/Right Arrows: Rotate left/right<br>
+            A/D: Strafe left/right<br>
+            Mouse: Click to lock pointer OR drag to look around<br>
+            Spacebar: Jump (Fly)<br>
+            -/+: Make Flatter/Hillier<br>
+            M: Toggle Minimap<br>
+            ~: Toggle Debug panel
+        </div>
     </div>
     <canvas id="minimap" width="200" height="200"></canvas>
     <div id="fps-counter" style="position: absolute; top: 10px; right: 10px; color: white; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; font-family: Arial, sans-serif; font-size: 14px; display: none;"></div>
     <div id="player-info" style="position: absolute; bottom: 10px; left: 10px; color: white; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; font-family: monospace; font-size: 14px; display: none; white-space: pre;"></div>
     <div id="debug-window" style="position: absolute; top: 50px; right: 10px; color: white; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 5px; font-family: monospace; font-size: 14px; display: none; min-width: 200px;"></div>
+    <a href="https://github.com/ricklindstrom/vibecraft" target="_blank" style="position: absolute; bottom: 10px; right: 10px; opacity: 0.7; transition: opacity 0.3s;">
+        <img src="https://github.githubassets.com/favicons/favicon.svg" width="32" height="32" alt="GitHub" style="filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));">Get the Code
+    </a>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="src/TerrainGenerator.js"></script>
     <script src="src/CoordinateConverter.js"></script>
@@ -139,11 +176,39 @@
         // World settings
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 8;
-        const RENDER_DISTANCE = 4;
+        const RENDER_DISTANCE = 6;  // Increased from 4
         const TREE_COUNT = 2000;
+        
+        // LOD settings
+        const LOD_LEVELS = {
+            FULL: { maxDistance: 4, treeChance: 1.0, waterDetail: 1 },
+            MEDIUM: { maxDistance: 6, treeChance: 0.5, waterDetail: 2 },
+            LOW: { maxDistance: 8, treeChance: 0.2, waterDetail: 4 }
+        };
+
+        function getLODLevel(distanceFromPlayer) {
+            if (distanceFromPlayer <= LOD_LEVELS.FULL.maxDistance) return LOD_LEVELS.FULL;
+            if (distanceFromPlayer <= LOD_LEVELS.MEDIUM.maxDistance) return LOD_LEVELS.MEDIUM;
+            return LOD_LEVELS.LOW;
+        }
+
+        function getChunkDistance(chunkX, chunkY, playerChunkX, playerChunkY) {
+            return Math.sqrt(
+                Math.pow(chunkX - playerChunkX, 2) + 
+                Math.pow(chunkY - playerChunkY, 2)
+            );
+        }
         
         // Input handling
         function onKeyDown(event) {
+            // Handle info panel toggle first
+            if (event.key === '?') {
+                event.preventDefault();
+                const infoPanel = document.getElementById('info');
+                infoPanel.classList.toggle('collapsed');
+                return;
+            }
+
             keys[event.code] = true;
             
             // Toggle FPS display with 'f' key
@@ -182,6 +247,15 @@
                 TerrainGenerator.amplitude = Math.max(0, TerrainGenerator.amplitude - 0.1);
                 clearAndRegenerateWorld();
             }
+
+            window.addEventListener('resize', onWindowResize);
+            
+            // Add info panel click functionality
+            const infoPanel = document.getElementById('info');
+            infoPanel.addEventListener('click', (event) => {
+                event.stopPropagation();  // Prevent click from triggering pointer lock
+                infoPanel.classList.toggle('collapsed');
+            });
         }
         
         function onKeyUp(event) {
@@ -366,6 +440,22 @@
             updatePlayer();
             updateMinimap();
 
+            // Update directional light position to follow player
+            const lightOffset = { x: 100, y: 100, z: 100 };
+            const threePos = CoordinateConverter.worldToThree.position(player.position);
+            directionalLight.position.set(
+                threePos.x + lightOffset.x,
+                threePos.y + lightOffset.y,
+                threePos.z + lightOffset.z
+            );
+            directionalLight.target.position.set(threePos.x, threePos.y, threePos.z);
+            directionalLight.target.updateMatrixWorld();
+            
+            // Ensure fog is maintained
+            if (!scene.fog || scene.fog.color.getHex() !== 0x87CEEB) {
+                scene.fog = new THREE.Fog(0x87CEEB, 50, 200);
+            }
+
             // Update player info display
             if (showPlayerInfo) {
                 const threePos = CoordinateConverter.worldToThree.position(player.position);
@@ -453,17 +543,21 @@ Press '~' to close`;
             scene.add(ambientLight);
             
             const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
-            directionalLight.position.set(50, 50, 25);
+            directionalLight.position.set(100, 100, 100);
             directionalLight.castShadow = true;
-            directionalLight.shadow.mapSize.width = 2048;
-            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.mapSize.width = 4096;  // Increased resolution
+            directionalLight.shadow.mapSize.height = 4096; // Increased resolution
             directionalLight.shadow.camera.near = 0.5;
             directionalLight.shadow.camera.far = 500;
-            directionalLight.shadow.camera.left = -100;
-            directionalLight.shadow.camera.right = 100;
-            directionalLight.shadow.camera.top = 100;
-            directionalLight.shadow.camera.bottom = -100;
+            directionalLight.shadow.camera.left = -200;   // Increased frustum size
+            directionalLight.shadow.camera.right = 200;   // Increased frustum size
+            directionalLight.shadow.camera.top = 200;     // Increased frustum size
+            directionalLight.shadow.camera.bottom = -200; // Increased frustum size
+            directionalLight.shadow.bias = -0.001;        // Reduce shadow artifacts
             scene.add(directionalLight);
+            
+            // Store light reference for updates
+            this.directionalLight = directionalLight;
             
             // Initialize world
             world = new World(scene, CHUNK_SIZE, RENDER_DISTANCE);
@@ -479,8 +573,6 @@ Press '~' to close`;
             document.addEventListener('pointerlockchange', () => {
                 isPointerLocked = document.pointerLockElement === renderer.domElement;
             });
-            
-            window.addEventListener('resize', onWindowResize);
             
             // Start game loop
             animate();
