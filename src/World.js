@@ -70,8 +70,8 @@ class World {
         this.waterMaterial = new THREE.MeshPhongMaterial({
             color: 0x004d99,
             transparent: true,
-            opacity: 0.3,
-            shininess: 10,
+            opacity: 0.5,
+            shininess: 0,
             specular: 0x222244,
             depthWrite: false,
             side: THREE.DoubleSide,
@@ -81,8 +81,8 @@ class World {
         this.waterSurfaceMaterial = new THREE.MeshPhongMaterial({
             color: 0x3399ff,
             transparent: true,
-            opacity: 0.45,
-            shininess: 120,
+            opacity: 0.75,
+            shininess: 100,
             specular: 0xffffff,
             depthWrite: false,
             side: THREE.DoubleSide,
@@ -235,14 +235,14 @@ class World {
         // Calculate chunk bounds
         const chunkWorldX = chunkX * this.CHUNK_SIZE;
         const chunkWorldY = chunkY * this.CHUNK_SIZE;
-        
+
         // Find closest point in chunk to player
         const closestX = Math.max(chunkWorldX, Math.min(chunkWorldX + this.CHUNK_SIZE, playerWorldX));
         const closestY = Math.max(chunkWorldY, Math.min(chunkWorldY + this.CHUNK_SIZE, playerWorldY));
-        
+
         // Calculate actual distance to closest point
         return Math.sqrt(
-            Math.pow(closestX - playerWorldX, 2) + 
+            Math.pow(closestX - playerWorldX, 2) +
             Math.pow(closestY - playerWorldY, 2)
         ) / this.CHUNK_SIZE; // Convert to chunk units
     }
@@ -250,7 +250,7 @@ class World {
     generateChunk(chunkX, chunkY, playerX, playerY) {
         const startTime = performance.now();
         const chunkKey = `${chunkX},${chunkY}`;
-        
+
         // Calculate LOD level based on actual distance to player
         const distance = this.getChunkDistance(chunkX, chunkY, playerX, playerY);
         const lodLevel = this.getLODLevel(distance);
@@ -270,10 +270,10 @@ class World {
         const chunkGroup = new THREE.Group();
         const instanceCounts = new Map();
         const blockPositions = new Map();
-        
+
         let blockCount = 0;
         let waterCount = 0;
-        
+
         // Find minimum height in chunk for water
         let minHeight = Infinity;
         let maxHeight = -Infinity;
@@ -284,7 +284,7 @@ class World {
                 const height = TerrainGenerator.getTerrainHeight(worldX, worldY);
                 minHeight = Math.min(minHeight, height);
                 maxHeight = Math.max(maxHeight, height);
-                
+
                 // Update global height stats
                 this.stats.highestPoint = Math.max(this.stats.highestPoint, height);
                 this.stats.lowestPoint = Math.min(this.stats.lowestPoint, height);
@@ -303,29 +303,29 @@ class World {
                 const waterPos = CoordinateConverter.worldToThree.position({
                     x: chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2,
                     y: chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2,
-                    z: depth
+                    z: depth + (isSurface ? 0 : 0.49)
                 });
                 waterPlane.position.set(waterPos.x, waterPos.y, waterPos.z);
                 waterPlane.rotation.x = -Math.PI / 2;
-                waterPlane.receiveShadow = true;
+                //waterPlane.receiveShadow = true;
                 chunkGroup.add(waterPlane);
                 waterCount++;
             }
         }
-        
+
         // Generate terrain blocks
         for (let x = 0; x < this.CHUNK_SIZE; x++) {
             for (let y = 0; y < this.CHUNK_SIZE; y++) {
                 const worldX = chunkX * this.CHUNK_SIZE + x;
                 const worldY = chunkY * this.CHUNK_SIZE + y;
                 const height = TerrainGenerator.getTerrainHeight(worldX, worldY);
-                
+
                 const startZ = Math.floor(height);
                 const bottomZ = Math.min(-5, startZ);
-                
+
                 // Simple distance-based LOD
                 const zStep = (lodLevel.maxDistance <= this.LOD_LEVELS.FULL.maxDistance) ? 1 : 1;
-                
+
                 for (let z = bottomZ; z <= startZ; z += zStep) {
                     let blockType;
                     let shouldRender = true;
@@ -378,7 +378,7 @@ class World {
                     material,
                     count
                 );
-                
+
                 // Adjust shadow settings based on LOD
                 if (lodLevel.maxDistance <= this.LOD_LEVELS.MEDIUM.maxDistance) {
                     instancedMesh.castShadow = true;
@@ -404,7 +404,7 @@ class World {
         // Generate trees with LOD-based density
         const chunkTrees = this.generateTreePositionsForChunk(chunkX, chunkY, lodLevel);
         this.generateTreesInChunk(chunkGroup, chunkX, chunkY, instanceCounts, blockPositions, chunkTrees);
-        
+
         this.chunks.set(chunkKey, chunkGroup);
         this.chunkLODs.set(chunkKey, lodLevel); // Store the LOD level
         this.scene.add(chunkGroup);
@@ -412,21 +412,21 @@ class World {
         // Update statistics
         const endTime = performance.now();
         const genTime = endTime - startTime;
-        
+
         this.stats.loadedChunks = this.chunks.size;
         this.stats.totalBlocksRendered += blockCount;
         this.stats.waterPlanesRendered += waterCount;
         this.stats.treesGenerated += chunkTrees.length;
         this.stats.lastChunkGenTime = genTime;
-        
+
         // Calculate moving average of chunk generation time
         this.stats.chunkGenTimeHistory.push(genTime);
         if (this.stats.chunkGenTimeHistory.length > 50) {
             this.stats.chunkGenTimeHistory.shift();
         }
-        this.stats.averageChunkGenTime = this.stats.chunkGenTimeHistory.reduce((a, b) => a + b, 0) 
+        this.stats.averageChunkGenTime = this.stats.chunkGenTimeHistory.reduce((a, b) => a + b, 0)
             / this.stats.chunkGenTimeHistory.length;
-            
+
         // Estimate memory usage (very rough approximation)
         const geometrySize = blockCount * 0.5; // KB per block
         const textureSize = blockCount * 0.1; // KB per block
@@ -436,16 +436,16 @@ class World {
     update(playerX, playerY) {
         const playerChunkX = Math.floor(playerX / this.CHUNK_SIZE);
         const playerChunkY = Math.floor(playerY / this.CHUNK_SIZE);
-        
+
         this.stats.currentPlayerChunk = { x: playerChunkX, y: playerChunkY };
-        
+
         // Check all existing chunks for LOD updates and generate new chunks
         for (let x = playerChunkX - this.RENDER_DISTANCE; x <= playerChunkX + this.RENDER_DISTANCE; x++) {
             for (let y = playerChunkY - this.RENDER_DISTANCE; y <= playerChunkY + this.RENDER_DISTANCE; y++) {
                 const distance = this.getChunkDistance(x, y, playerX, playerY);
                 const newLodLevel = this.getLODLevel(distance);
                 const chunkKey = `${x},${y}`;
-                
+
                 // If chunk exists but LOD would be different, or chunk doesn't exist
                 if (!this.chunks.has(chunkKey) || this.chunkLODs.get(chunkKey) !== newLodLevel) {
                     this.generateChunk(x, y, playerX, playerY);
@@ -486,7 +486,7 @@ class World {
                 blockCounts.set(block.type, 0);
                 blockPositions.set(block.type, []);
             }
-            
+
             const worldPos = {
                 x: block.x,
                 y: block.y,
