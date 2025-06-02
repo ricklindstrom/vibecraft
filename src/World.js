@@ -12,9 +12,7 @@ const BLOCK_TYPES = {
 const STRUCTURE_TYPES = {
     TREE: 'tree',
     HOUSE: 'house',
-    CAVE: 'cave',
     RUIN: 'ruin'
-    // Add more structure types as needed
 };
 
 // Structure generation result format

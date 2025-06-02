@@ -1,0 +1,22 @@
+## TASKS
+ - [X] Publish to a github 'page'. https://ricklindstrom.github.io/vibecraft/
+ - [X] Make a link on the readme linking to the playable page. https://ricklindstrom.github.io/vibecraft/
+ - [X] Allow jumping even if not on the ground to allow 'flying'.
+ - [X] Add screenshot to README
+ - [X] Make a link on the html page linking to the github page https://github.com/ricklindstrom/vibecraft 
+ - [X] Make two types of water layers. Make water surface shiny. Properly aligm subsurface water layers.
+ - [X] Fix shadows
+ - [X] Implement level of detail (LOD)
+ - [ ] Add detail to blocks.
+ - [ ] Rotate minimap to align with direction of player.
+ - [ ] Optimize speed of minimap (It cuts FPS in half)
+ - [ ] Fix FPS display in debug panel.
+ - [ ] Add proper smoothing to spline function.
+ - [X] Add generic structure support
+ - [.] Add houses.
+ - [ ] Add castles.
+ - [ ] Add roads.
+ - [ ] Create house building system (L-System)?
+ - [ ] Add terrain rating score for home building to identify good locations for building houses/castles. (Flat near water? Tops of hills?)
+ - [ ] Add cloud layer
+ - [ ] Improve perlin noise function to make more natural terrain.

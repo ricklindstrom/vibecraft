@@ -48,26 +48,6 @@ A vibe-coded browser-based minecraft-inspired world generator playground. Built 
 - Modern web browser with WebGL support
 - Three.js r128 (loaded from CDN)
 
-## TO DO
- - [X] Publish to a github 'page'. https://ricklindstrom.github.io/vibecraft/
- - [X] Make a link on the readme linking to the playable page. https://ricklindstrom.github.io/vibecraft/
- - [X] Allow jumping even if not on the ground to allow 'flying'.
- - [X] Add screenshot to README
- - [X] Make a link on the html page linking to the github page https://github.com/ricklindstrom/vibecraft 
- - [.] Make two types of water layers. Make water surface shiny. Properly aligm subsurface water layers.
- - [X] Fix shadow
- - [X] Implement level of detail (LOD)
- - [ ] Add detail to blocks.
- - [ ] Rotate minimap to align with direction of player.
- - [ ] Add proper smoothing to spline function.
- - [ ] Add houses.
- - [ ] Add castles.
- - [ ] Add roads.
- - [ ] Create house building system (L-System)?
- - [ ] Add terrain rating score for home building to identify good locations for building houses. (Flat near water.). 
- - [ ] Add cloud layer
- - [ ] Improve perlin noise function to make more natural terrain.
-
 ## Quick Start
 1. Open index.html in a browser
 2. Enjoy
