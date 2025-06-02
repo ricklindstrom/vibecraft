@@ -93,6 +93,7 @@
     <script src="src/CoordinateConverter.js"></script>
     <script src="src/Physics.js"></script>
     <script src="src/World.js"></script>
+    <script src="src/Houses.js"></script>
     <script>
         // Game variables
         let scene, camera, renderer, world;
@@ -173,6 +174,8 @@
         fpsCounter.style.zIndex = '1000';
         document.body.appendChild(fpsCounter);
         
+        let showTrees = true;
+
         // World settings
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 8;
@@ -228,6 +231,11 @@
             if (event.code === 'KeyP') {
                 showPlayerInfo = !showPlayerInfo;
                 playerInfo.style.display = showPlayerInfo ? 'block' : 'none';
+            }
+
+            // Toggle trees with 't' key
+            if (event.code === 'KeyT') {
+                showTrees = !showTrees;
             }
 
             // Toggle debug window with '~' key (Backquote)

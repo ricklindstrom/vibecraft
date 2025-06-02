@@ -45,8 +45,10 @@ class World {
         // LOD settings - simplified to just distance checks
         this.LOD_LEVELS = {
             FULL: { maxDistance: 2, treeChance: 1.0, waterDetail: 1, stoneChance: 0.9 },
-            MEDIUM: { maxDistance: 4, treeChance: 0.5, waterDetail: 2, stoneChance: 0.4 },
-            LOW: { maxDistance: 8, treeChance: 0.3, waterDetail: 4, stoneChance: 0.2 }
+            HIGH: { maxDistance: 3, treeChance: 1.0, waterDetail: 1, stoneChance: 0.7 },
+            MEDIUM: { maxDistance: 5, treeChance: 1.0, waterDetail: 2, stoneChance: 0.4 },
+            LOW: { maxDistance: 8, treeChance: 0.3, waterDetail: 4, stoneChance: 0.2 },
+            MINIMAL: { maxDistance: 12, treeChance: 0.0, waterDetail: 10, stoneChance: 0.2   }
         };
 
         this.stats = {
@@ -215,16 +217,20 @@ class World {
             };
         });
 
-        // Generate all trees using the new system
+        // Generate all trees
         treeStructures.forEach(structure => {
-            this.generateStructure(structure, chunkGroup);
+            const meshes = this.generateStructure(structure, chunkGroup);
+            // No need to add meshes again as they're already added to chunkGroup in generateStructure
         });
     }
 
     getLODLevel(distance) {
         if (distance <= this.LOD_LEVELS.FULL.maxDistance) return this.LOD_LEVELS.FULL;
+        if (distance <= this.LOD_LEVELS.HIGH.maxDistance) return this.LOD_LEVELS.HIGH;
         if (distance <= this.LOD_LEVELS.MEDIUM.maxDistance) return this.LOD_LEVELS.MEDIUM;
-        return this.LOD_LEVELS.LOW;
+        if (distance <= this.LOD_LEVELS.LOW.maxDistance) return this.LOD_LEVELS.LOW;
+        if (distance <= this.LOD_LEVELS.MINIMAL.maxDistance) return this.LOD_LEVELS.MINIMAL;
+        return this.LOD_LEVELS.MINIMAL;
     }
 
     getChunkDistance(chunkX, chunkY, playerX, playerY) {
@@ -366,6 +372,11 @@ class World {
             }
         }
 
+        if (chunkX === 0 && chunkY === 0) {
+            let houseStructure = Houses.createHouse(chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2, chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2);
+            this.generateStructure(houseStructure, chunkGroup);
+        }
+
         // Create instanced meshes for terrain blocks
         for (const [blockType, count] of instanceCounts) {
             if (count > 0) {
@@ -399,6 +410,7 @@ class World {
                 instancedMesh.instanceMatrix.needsUpdate = true;
                 chunkGroup.add(instancedMesh);
             }
+
         }
 
         // Generate trees with LOD-based density
