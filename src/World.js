@@ -175,7 +175,7 @@ class World {
     generateTreesInChunk(chunkGroup, chunkX, chunkY, instanceCounts, blockPositions, chunkTrees) {
         const treeStructures = chunkTrees.map(tree => {
             const blocks = [];
-            const trunkHeight = 4 + Math.floor(Math.random() * 3);
+            const trunkHeight = 5 + chunkX % 4;// Math.floor(Math.random() * 3);
 
             // Add trunk blocks
             for (let z = 0; z < trunkHeight; z++) {
@@ -370,9 +370,13 @@ class World {
             }
         }
 
-        if (chunkX === 0 && chunkY === 0) {
-            let houseStructure = Houses.createHouse(chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2, chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2);
-            this.generateStructure(houseStructure, chunkGroup);
+        if (chunkX === chunkY) {
+            const centerX = chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
+            const centerY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
+            if(Houses.isBuildable(centerX, centerY)) {
+                let houseStructure = Houses.createHouse(centerX, centerY);
+                this.generateStructure(houseStructure, chunkGroup);
+            }
         }
 
         // Create instanced meshes for terrain blocks
