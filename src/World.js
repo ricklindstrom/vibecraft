@@ -5,7 +5,8 @@ const BLOCK_TYPES = {
     STONE: 2,
     SAND: 3,
     WOOD: 4,
-    LEAVES: 5
+    LEAVES: 5,
+    GLASS: 6
 };
 
 // Structure definition format
@@ -131,10 +132,18 @@ class World {
                 new THREE.MeshLambertMaterial({ color: 0x8B4513 }),
                 new THREE.MeshLambertMaterial({ color: 0x8B4513 })
             ],
+            [BLOCK_TYPES.GLASS]: new THREE.MeshLambertMaterial({
+                color: 0x88ccee,
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.DoubleSide,
+                blending: THREE.NormalBlending,
+                depthWrite: false
+            }),
             [BLOCK_TYPES.LEAVES]: new THREE.MeshLambertMaterial({
                 color: 0x228B22,
                 transparent: true,
-                opacity: 0.8
+                opacity: 0.9
             })
         };
     }
@@ -179,11 +188,7 @@ class World {
 
             // Add trunk blocks
             for (let z = 0; z < trunkHeight; z++) {
-                blocks.push({
-                    x: tree.x,
-                    y: tree.y,
-                    z: tree.groundHeight + 1 + z,
-                    type: BLOCK_TYPES.WOOD
+                blocks.push({ x: tree.x, y: tree.y, z: tree.groundHeight + 1 + z, type: BLOCK_TYPES.WOOD
                 });
             }
 
@@ -195,12 +200,7 @@ class World {
                         if (Math.abs(dx) === 2 && Math.abs(dy) === 2) continue;
                         if (dz === -1 && (Math.abs(dx) === 2 || Math.abs(dy) === 2)) continue;
 
-                        blocks.push({
-                            x: tree.x + dx,
-                            y: tree.y + dy,
-                            z: leavesBaseZ + dz,
-                            type: BLOCK_TYPES.LEAVES
-                        });
+                        blocks.push({ x: tree.x + dx, y: tree.y + dy, z: leavesBaseZ + dz, type: BLOCK_TYPES.LEAVES });
                     }
                 }
             }
