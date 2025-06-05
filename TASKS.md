@@ -7,16 +7,20 @@
  - [X] Make two types of water layers. Make water surface shiny. Properly aligm subsurface water layers.
  - [X] Fix shadows
  - [X] Implement level of detail (LOD)
- - [ ] Add detail to blocks.
- - [ ] Rotate minimap to align with direction of player.
- - [ ] Optimize speed of minimap (It cuts FPS in half)
- - [ ] Fix FPS display in debug panel.
- - [ ] Add proper smoothing to spline function.
  - [X] Add generic structure support
- - [.] Add houses.
+ - [X] Add houses.
+ - [X] Fix FPS display in debug panel.
+ - [X] Optimize speed of minimap (It cuts FPS in half)
+ - [X] Create a minimap showing chunk debug info
+ - [X] LOD: Use larger block sizes for distant chunks
+ - [ ] Use frustum to determine which chunks to load
+ - [ ] Add detail to blocks.
+ - [ ] Add proper smoothing to spline function.
+ - [ ] Add support for terrain overrides to support player collision for strutures.
  - [ ] Add castles.
  - [ ] Add roads.
  - [ ] Create house building system (L-System)?
  - [ ] Add terrain rating score for home building to identify good locations for building houses/castles. (Flat near water? Tops of hills?)
  - [ ] Add cloud layer
+ - [ ] Rotate minimap to align with direction of player.
  - [ ] Improve perlin noise function to make more natural terrain.

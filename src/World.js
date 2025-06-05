@@ -43,11 +43,11 @@ class World {
 
         // LOD settings - simplified to just distance checks
         this.LOD_LEVELS = {
-            FULL: { maxDistance: 2, treeChance: 1.0, waterDetail: 1, stoneChance: 0.9 },
-            HIGH: { maxDistance: 3, treeChance: 1.0, waterDetail: 1, stoneChance: 0.7 },
-            MEDIUM: { maxDistance: 5, treeChance: 1.0, waterDetail: 2, stoneChance: 0.4 },
-            LOW: { maxDistance: 8, treeChance: 0.3, waterDetail: 4, stoneChance: 0.2 },
-            MINIMAL: { maxDistance: 12, treeChance: 0.0, waterDetail: 10, stoneChance: 0.2   }
+            FULL: { blockSize: 1, maxDistance: 2, treeChance: 1.0, waterDetail: 1, stoneChance: 0.9 },
+            HIGH: { blockSize: 1, maxDistance: 3, treeChance: 1.0, waterDetail: 1, stoneChance: 0.7 },
+            MEDIUM: { blockSize: 1, maxDistance: 5, treeChance: 1.0, waterDetail: 2, stoneChance: 0.4 },
+            LOW: { blockSize: 2, maxDistance: 8, treeChance: 0.3, waterDetail: 4, stoneChance: 0.2 },
+            MINIMAL: { blockSize: 4, maxDistance: 12, treeChance: 0.0, waterDetail: 8, stoneChance: 0.2 }
         };
 
         this.stats = {
@@ -66,6 +66,8 @@ class World {
 
         // Create shared geometry and materials
         this.blockGeometry = new THREE.BoxGeometry(1, 1, 1);
+        this.blockGeometry2x = new THREE.BoxGeometry(2, 2, 2); // 2x2x2 blocks
+        this.blockGeometry4x = new THREE.BoxGeometry(4, 4, 4); // 4x4x4 blocks
         this.materials = this.createMaterials();
         this.waterGeometry = new THREE.PlaneGeometry(this.CHUNK_SIZE, this.CHUNK_SIZE);
         this.waterMaterial = new THREE.MeshPhongMaterial({
@@ -258,18 +260,24 @@ class World {
         // Calculate LOD level based on actual distance to player
         const distance = this.getChunkDistance(chunkX, chunkY, playerX, playerY);
         const lodLevel = this.getLODLevel(distance);
-
+        
         // Check if chunk exists and needs LOD update
         if (this.chunks.has(chunkKey)) {
             const currentLOD = this.chunkLODs.get(chunkKey);
             if (currentLOD === lodLevel) {
                 return; // Same LOD level, no update needed
             }
+            //If the LOD is only one level higher, we can keep it as is.
+            //TODO: Implement this.
+
             // Different LOD level, remove old chunk
             this.scene.remove(this.chunks.get(chunkKey));
             this.chunks.delete(chunkKey);
             this.chunkLODs.delete(chunkKey);
         }
+
+        const blockSize = lodLevel.blockSize;
+        const samplingStep = blockSize; // Sample terrain at block resolution
 
         const chunkGroup = new THREE.Group();
         const instanceCounts = new Map();
@@ -278,11 +286,11 @@ class World {
         let blockCount = 0;
         let waterCount = 0;
 
-        // Find minimum height in chunk for water
+        // Find minimum height in chunk for water - sample at reduced resolution
         let minHeight = Infinity;
         let maxHeight = -Infinity;
-        for (let x = 0; x < this.CHUNK_SIZE; x++) {
-            for (let y = 0; y < this.CHUNK_SIZE; y++) {
+        for (let x = 0; x < this.CHUNK_SIZE; x += samplingStep) {
+            for (let y = 0; y < this.CHUNK_SIZE; y += samplingStep) {
                 const worldX = chunkX * this.CHUNK_SIZE + x;
                 const worldY = chunkY * this.CHUNK_SIZE + y;
                 const height = TerrainGenerator.getTerrainHeight(worldX, worldY);
@@ -317,9 +325,21 @@ class World {
             }
         }
 
-        // Generate terrain blocks
-        for (let x = 0; x < this.CHUNK_SIZE; x++) {
-            for (let y = 0; y < this.CHUNK_SIZE; y++) {
+
+        // if(lodLevel === this.LOD_LEVELS.MINIMAL) {
+        //     const worldX = chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE/2;
+        //     const worldY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE/2;
+        //     const height = TerrainGenerator.getTerrainHeight(worldX, worldY) + this.CHUNK_SIZE/2;
+        //     const horizon = new THREE.Mesh(this.horizonGeometry, this.horizonMaterial);
+        //     const horizonPos = CoordinateConverter.worldToThree.position({  x: worldX, y: worldY, z: height});
+        //     horizon.position.set(horizonPos.x, horizonPos.y, horizonPos.z);
+        //     horizon.rotation.x = -Math.PI / 2;
+        //     this.scene.add(horizon);
+        // } else {
+
+        // Generate terrain blocks - sample at reduced resolution based on block size
+        for (let x = 0; x < this.CHUNK_SIZE; x += samplingStep) {
+            for (let y = 0; y < this.CHUNK_SIZE; y += samplingStep) {
                 const worldX = chunkX * this.CHUNK_SIZE + x;
                 const worldY = chunkY * this.CHUNK_SIZE + y;
                 const height = TerrainGenerator.getTerrainHeight(worldX, worldY);
@@ -327,17 +347,17 @@ class World {
                 const startZ = Math.floor(height);
                 const bottomZ = Math.min(-5, startZ);
 
-                // Simple distance-based LOD
-                const zStep = (lodLevel.maxDistance <= this.LOD_LEVELS.FULL.maxDistance) ? 1 : 1;
+                // Reduce vertical sampling for larger blocks
+                const zStep = blockSize;
 
                 for (let z = bottomZ; z <= startZ; z += zStep) {
                     let blockType;
                     let shouldRender = true;
 
                     if (height >= 0) {
-                        if (z === startZ) {
+                        if (z === startZ || (z > startZ - blockSize && z <= startZ)) {
                             blockType = BLOCK_TYPES.GRASS;
-                        } else if (z > startZ - 2) {
+                        } else if (z > startZ - 2 * blockSize) {
                             blockType = BLOCK_TYPES.DIRT;
                         } else {
                             blockType = BLOCK_TYPES.STONE;
@@ -345,7 +365,7 @@ class World {
                             shouldRender = Math.random() < lodLevel.stoneChance;
                         }
                     } else {
-                        if(z === startZ) {
+                        if(z === startZ || (z > startZ - blockSize && z <= startZ)) {
                             blockType = BLOCK_TYPES.SAND;
                         } else {
                             blockType = BLOCK_TYPES.STONE;
@@ -361,16 +381,22 @@ class World {
                             blockPositions.set(blockType, []);
                         }
 
-                        const worldPos = { x: worldX, y: worldY, z: z };
+                        // Position the center of larger blocks correctly
+                        const blockCenterOffset = (blockSize - 1) / 2;
+                        const worldPos = { 
+                            x: worldX + blockCenterOffset, 
+                            y: worldY + blockCenterOffset, 
+                            z: z + blockCenterOffset 
+                        };
                         const threePos = CoordinateConverter.worldToThree.position(worldPos);
-                        blockPositions.get(blockType).push(threePos);
+                        blockPositions.get(blockType).push({...threePos, blockSize});
                         instanceCounts.set(blockType, instanceCounts.get(blockType) + 1);
                     }
                 }
             }
         }
 
-        if (chunkX === chunkY) {
+        if (chunkX === chunkY && blockSize === 1) { // Only build houses on high-detail chunks
             const centerX = chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
             const centerY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
             if(Houses.isBuildable(centerX, centerY)) {
@@ -379,40 +405,65 @@ class World {
             }
         }
 
-        // Create instanced meshes for terrain blocks
-        for (const [blockType, count] of instanceCounts) {
-            if (count > 0) {
-                const material = Array.isArray(this.materials[blockType])
-                    ? this.materials[blockType]
-                    : Array(6).fill(this.materials[blockType]);
-
-                const instancedMesh = new THREE.InstancedMesh(
-                    this.blockGeometry,
-                    material,
-                    count
-                );
-
-                // Adjust shadow settings based on LOD
-                if (lodLevel.maxDistance <= this.LOD_LEVELS.MEDIUM.maxDistance) {
-                    instancedMesh.castShadow = true;
-                    instancedMesh.receiveShadow = true;
-                } else {
-                    instancedMesh.castShadow = false;
-                    instancedMesh.receiveShadow = true;
+        // Create instanced meshes for terrain blocks - group by block size
+        const blocksBySize = new Map();
+        for (const [blockType, positions] of blockPositions) {
+            for (const posData of positions) {
+                const size = posData.blockSize || 1;
+                if (!blocksBySize.has(size)) {
+                    blocksBySize.set(size, new Map());
                 }
-
-                let instanceIndex = 0;
-                for (const pos of blockPositions.get(blockType)) {
-                    this.position.set(pos.x, pos.y, pos.z);
-                    this.matrix.compose(this.position, this.quaternion, this.scale);
-                    instancedMesh.setMatrixAt(instanceIndex, this.matrix);
-                    instanceIndex++;
+                if (!blocksBySize.get(size).has(blockType)) {
+                    blocksBySize.get(size).set(blockType, []);
                 }
+                blocksBySize.get(size).get(blockType).push(posData);
+            }
+        }
 
-                instancedMesh.instanceMatrix.needsUpdate = true;
-                chunkGroup.add(instancedMesh);
+        for (const [size, blockTypeMap] of blocksBySize) {
+            // Choose geometry based on block size
+            let geometry;
+            if (size === 1) {
+                geometry = this.blockGeometry;
+            } else if (size === 2) {
+                geometry = this.blockGeometry2x;
+            } else {
+                geometry = this.blockGeometry4x;
             }
 
+            for (const [blockType, positions] of blockTypeMap) {
+                if (positions.length > 0) {
+                    const material = Array.isArray(this.materials[blockType])
+                        ? this.materials[blockType]
+                        : Array(6).fill(this.materials[blockType]);
+
+                    const instancedMesh = new THREE.InstancedMesh(
+                        geometry,
+                        material,
+                        positions.length
+                    );
+
+                    // Adjust shadow settings based on LOD
+                    if (lodLevel.maxDistance <= this.LOD_LEVELS.MEDIUM.maxDistance) {
+                        instancedMesh.castShadow = true;
+                        instancedMesh.receiveShadow = true;
+                    } else {
+                        instancedMesh.castShadow = false;
+                        instancedMesh.receiveShadow = false;
+                    }
+
+                    let instanceIndex = 0;
+                    for (const posData of positions) {
+                        this.position.set(posData.x, posData.y, posData.z);
+                        this.matrix.compose(this.position, this.quaternion, this.scale);
+                        instancedMesh.setMatrixAt(instanceIndex, this.matrix);
+                        instanceIndex++;
+                    }
+
+                    instancedMesh.instanceMatrix.needsUpdate = true;
+                    chunkGroup.add(instancedMesh);
+                }
+            }
         }
 
         // Generate trees with LOD-based density

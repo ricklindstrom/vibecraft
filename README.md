@@ -6,7 +6,7 @@ A vibe-coded browser-based minecraft-inspired world generator playground. Built 
 
 ## Features
 
-![Screenshot](images/screenshot-vibecraft-1.png)
+![Screenshot](images/screenshot-vibecraft-houses-on-hill.png)
 
 ### World Generation
 - Infinite procedurally generated terrain using multi-octave noise

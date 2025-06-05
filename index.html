@@ -82,6 +82,8 @@
         </div>
     </div>
     <canvas id="minimap" width="200" height="200"></canvas>
+    <!-- New chunk LOD minimap -->
+    <canvas id="chunk-lod-minimap" width="200" height="200" style="position: absolute; top: 220px; right: 10px; border: 2px solid rgba(255,255,255,0.5); border-radius: 5px; pointer-events: none; display: none;"></canvas>
     <div id="fps-counter" style="position: absolute; top: 10px; right: 10px; color: white; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; font-family: Arial, sans-serif; font-size: 14px; display: none;"></div>
     <div id="player-info" style="position: absolute; bottom: 10px; left: 10px; color: white; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; font-family: monospace; font-size: 14px; display: none; white-space: pre;"></div>
     <div id="debug-window" style="position: absolute; top: 50px; right: 10px; color: white; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 5px; font-family: monospace; font-size: 14px; display: none; min-width: 200px;"></div>
@@ -121,6 +123,7 @@
         let fpsCounter = document.createElement('div');
         let lastTime = performance.now();
         let frameCount = 0;
+        let lastFrameCount = 0;
         
         // Debug window
         let showDebug = false;
@@ -159,6 +162,7 @@
         const MINIMAP_SIZE = 200;  // Size of the minimap in pixels
         const MINIMAP_SCALE = 2;   // How many world units per pixel
         let showMinimap = true;    // Minimap visibility state
+        let showChunkLODMinimap = false; // Chunk LOD minimap visibility state
         
         // Style FPS counter
         fpsCounter.style.position = 'absolute';
@@ -242,6 +246,13 @@
             if (event.code === 'Backquote') {
                 showDebug = !showDebug;
                 debugWindow.style.display = showDebug ? 'block' : 'none';
+            }
+
+            // Toggle chunk LOD minimap with 'c' key
+            if (event.code === 'KeyC') {
+                showChunkLODMinimap = !showChunkLODMinimap;
+                const chunkLodMinimap = document.getElementById('chunk-lod-minimap');
+                chunkLodMinimap.style.display = showChunkLODMinimap ? 'block' : 'none';
             }
 
             // Increase terrain amplitude with + or =
@@ -396,7 +407,7 @@
                     const height = TerrainGenerator.getTerrainHeight(worldX, worldY);
                     
                     // Convert world coordinates to minimap coordinates
-                    const mapX = ((worldX - startX) / MINIMAP_SCALE);  // Removed flip
+                    const mapX = ((worldX - startX) / MINIMAP_SCALE);
                     const mapY = ((worldY - startY) / MINIMAP_SCALE);
                     
                     // Color based on height
@@ -432,6 +443,61 @@
             ctx.fill();
         }
         
+        // New: Chunk LOD minimap update function
+        function updateChunkLODMinimap() {
+            if (!showChunkLODMinimap) return;
+            const canvas = document.getElementById('chunk-lod-minimap');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Get loaded chunks and their LODs
+            const chunkEntries = Array.from(world.chunkLODs.entries());
+            if (chunkEntries.length === 0) return;
+            // Find bounds
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            for (const key of world.chunkLODs.keys()) {
+                const [x, y] = key.split(',').map(Number);
+                minX = Math.min(minX, x);
+                maxX = Math.max(maxX, x);
+                minY = Math.min(minY, y);
+                maxY = Math.max(maxY, y);
+            }
+            const gridWidth = maxX - minX + 1;
+            const gridHeight = maxY - minY + 1;
+            // Determine chunk square size
+            const chunkSizePx = Math.floor(Math.min(canvas.width / gridWidth, canvas.height / gridHeight));
+            // Draw each chunk
+            for (const [key, lodLevel] of chunkEntries) {
+                const [x, y] = key.split(',').map(Number);
+                // LOD: 0 (highest detail) = white, higher = darker
+                // We'll map FULL=0, HIGH=1, MEDIUM=2, LOW=3, MINIMAL=4
+                let lodIndex = 4; // Default to lowest detail
+                if (lodLevel === world.LOD_LEVELS.FULL) lodIndex = 0;
+                else if (lodLevel === world.LOD_LEVELS.HIGH) lodIndex = 1;
+                else if (lodLevel === world.LOD_LEVELS.MEDIUM) lodIndex = 2;
+                else if (lodLevel === world.LOD_LEVELS.LOW) lodIndex = 3;
+                // Grayscale: 0=white, 255=black
+                const gray = Math.round(255 * (lodIndex / 4));
+                ctx.fillStyle = `rgb(${255 - gray},${255 - gray},${255 - gray})`;
+                // Draw square
+                ctx.fillRect(
+                    (x - minX) * chunkSizePx,
+                    (y - minY) * chunkSizePx,
+                    chunkSizePx,
+                    chunkSizePx
+                );
+            }
+            // Optionally, draw player chunk in red
+            const playerChunk = world.stats.currentPlayerChunk;
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(
+                (playerChunk.x - minX) * chunkSizePx,
+                (playerChunk.y - minY) * chunkSizePx,
+                chunkSizePx,
+                chunkSizePx
+            );
+        }
+        
         // Main game loop
         function animate() {
             requestAnimationFrame(animate);
@@ -441,12 +507,14 @@
             const currentTime = performance.now();
             if (currentTime >= lastTime + 1000) {
                 fpsCounter.textContent = `FPS: ${frameCount}`;
+                lastFrameCount = frameCount;
                 frameCount = 0;
                 lastTime = currentTime;
+                updateMinimap();
+                updateChunkLODMinimap();
             }
-            
+
             updatePlayer();
-            updateMinimap();
 
             // Update directional light position to follow player
             const lightOffset = { x: 100, y: 100, z: 100 };
@@ -473,8 +541,7 @@
 `World Coordinates:
   Position: (${player.position.x.toFixed(2)}, ${player.position.y.toFixed(2)}, ${player.position.z.toFixed(2)})
   Rotation: (${(player.rotation.x * 180 / Math.PI).toFixed(1)}°, ${(player.rotation.y * 180 / Math.PI).toFixed(1)}°)
-  Velocity: (${player.velocity.x.toFixed(2)}, ${player.velocity.y.toFixed(2)})
-  Jump Velocity: ${player.jumpVelocity.toFixed(2)}
+  Velocity: (${player.velocity.x.toFixed(2)}, ${player.velocity.y.toFixed(2)}, ${player.jumpVelocity.toFixed(2)})
   On Ground: ${player.onGround}
   Terrain Amplitude: ${TerrainGenerator.amplitude.toFixed(2)}
 
@@ -500,14 +567,14 @@ World Stats:
     Lowest point: ${stats.lowestPoint.toFixed(1)}
     Total blocks: ${stats.totalBlocksRendered.toLocaleString()}
     Water planes: ${stats.waterPlanesRendered}
-    Trees: ${stats.treesGenerated}
+    Trees: ${showTrees ? stats.treesGenerated : 'Hidden'}
     Amplitude: ${TerrainGenerator.amplitude.toFixed(2)}
 
 Performance:
   Last chunk gen: ${stats.lastChunkGenTime.toFixed(1)}ms
   Avg chunk gen: ${stats.averageChunkGenTime.toFixed(1)}ms
   Est. memory: ${stats.memoryUsed.toFixed(1)} MB
-  Current FPS: ${frameCount}
+  Current FPS: ${lastFrameCount}
 
 Player Physics:
   Speed: ${player.speed}
