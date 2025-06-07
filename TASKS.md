@@ -1,26 +1,30 @@
 ## TASKS
- - [X] Publish to a github 'page'. https://ricklindstrom.github.io/vibecraft/
- - [X] Make a link on the readme linking to the playable page. https://ricklindstrom.github.io/vibecraft/
- - [X] Allow jumping even if not on the ground to allow 'flying'.
- - [X] Add screenshot to README
- - [X] Make a link on the html page linking to the github page https://github.com/ricklindstrom/vibecraft 
- - [X] Make two types of water layers. Make water surface shiny. Properly aligm subsurface water layers.
- - [X] Fix shadows
- - [X] Implement level of detail (LOD)
- - [X] Add generic structure support
- - [X] Add houses.
- - [X] Fix FPS display in debug panel.
- - [X] Optimize speed of minimap (It cuts FPS in half)
- - [X] Create a minimap showing chunk debug info
+ - [X] DOC: Publish to a github 'page'. https://ricklindstrom.github.io/vibecraft/
+ - [X] DOC: Make a link on the readme linking to the playable page. https://ricklindstrom.github.io/vibecraft/
+ - [X] PLAYER: Allow jumping even if not on the ground to allow 'flying'.
+ - [X] DOC: Add screenshot to README
+ - [X] DOC: Make a link on the html page linking to the github page https://github.com/ricklindstrom/vibecraft 
+ - [X] POLISH: Make two types of water layers. Make water surface shiny. Properly aligm subsurface water layers.
+ - [X] POLISH: Fix shadows
+ - [X] LOD: Implement level of detail (LOD)
+ - [X] STRUCTURES: Add generic structure support
+ - [X] STRUCTURES: Add houses.
+ - [X] DEBUG: Fix FPS display in debug panel.
+ - [X] PERF: Optimize speed of minimap (It cuts FPS in half)
+ - [X] CHUNKS: Create a minimap showing chunk debug info
  - [X] LOD: Use larger block sizes for distant chunks
- - [ ] Use frustum to determine which chunks to load
- - [ ] Add detail to blocks.
- - [ ] Add proper smoothing to spline function.
- - [ ] Add support for terrain overrides to support player collision for strutures.
- - [ ] Add castles.
- - [ ] Add roads.
- - [ ] Create house building system (L-System)?
- - [ ] Add terrain rating score for home building to identify good locations for building houses/castles. (Flat near water? Tops of hills?)
- - [ ] Add cloud layer
- - [ ] Rotate minimap to align with direction of player.
- - [ ] Improve perlin noise function to make more natural terrain.
+ - [X] STRUCTURES: Relocate tree creation out of world class
+ - [ ] TERRAIN + PERF: Only create subsurface blocks if the terrain is sufficently sloped
+ - [ ] LOD: Don't evict chunks for dropping one LOD level
+ - [ ] CHUNKS: Use frustum to determine which chunks to load
+ - [ ] POLISH: Add detail to blocks.
+ - [ ] TERRAIN CALC: Add proper smoothing to spline function.
+ - [ ] TERRAIN CALC + STRUCTURES: Add support for terrain overrides to support player collision for strutures.
+ - [ ] STRUCTURES: Add castles.
+ - [ ] STUUCTURES: Add roads.
+ - [ ] STRUCTURES: Create house building system (L-System)?
+ - [ ] TERRAIN CALC + STRUCTURES: Add terrain rating score for home building to identify good locations for building houses/castles. (Flat near water? Tops of hills?)
+ - [ ] POLISH: Add cloud layer
+ - [ ] POLISH: Rotate minimap to align with direction of player.
+ - [ ] TERRAIN CALC: Improve perlin noise function to make more natural terrain.
+ - [ ] TERRAIN DISP: Allow swiching between displaying surfaces and blocks

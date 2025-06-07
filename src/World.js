@@ -155,7 +155,6 @@ class World {
         const treesPerChunk = Math.floor(300 / (this.RENDER_DISTANCE * this.RENDER_DISTANCE * 4));
 
         const random = (x, y) => {
-            // Use smaller numbers to avoid overflow
             const a = ((x * 1231) + (y * 5897)) % 123456789;
             // Mix the bits using XOR and shifts
             let b = a;
@@ -183,44 +182,10 @@ class World {
         return chunkTrees;
     }
 
-    generateTreesInChunk(chunkGroup, chunkX, chunkY, instanceCounts, blockPositions, chunkTrees) {
-        const treeStructures = chunkTrees.map(tree => {
-            const blocks = [];
-            const trunkHeight = 5 + chunkX % 4;// Math.floor(Math.random() * 3);
-
-            // Add trunk blocks
-            for (let z = 0; z < trunkHeight; z++) {
-                blocks.push({ x: tree.x, y: tree.y, z: tree.groundHeight + 1 + z, type: BLOCK_TYPES.WOOD
-                });
-            }
-
-            // Add leaves
-            const leavesBaseZ = tree.groundHeight + 1 + trunkHeight;
-            for (let dx = -2; dx <= 2; dx++) {
-                for (let dy = -2; dy <= 2; dy++) {
-                    for (let dz = -1; dz <= 1; dz++) {
-                        if (Math.abs(dx) === 2 && Math.abs(dy) === 2) continue;
-                        if (dz === -1 && (Math.abs(dx) === 2 || Math.abs(dy) === 2)) continue;
-
-                        blocks.push({ x: tree.x + dx, y: tree.y + dy, z: leavesBaseZ + dz, type: BLOCK_TYPES.LEAVES });
-                    }
-                }
-            }
-
-            return {
-                type: STRUCTURE_TYPES.TREE,
-                blocks: blocks,
-                metadata: {
-                    height: trunkHeight,
-                    groundHeight: tree.groundHeight
-                }
-            };
-        });
-
-        // Generate all trees
-        treeStructures.forEach(structure => {
-            const meshes = this.generateStructure(structure, chunkGroup);
-            // No need to add meshes again as they're already added to chunkGroup in generateStructure
+    generateTreesInChunk(chunkGroup, chunkX, chunkY, chunkTrees) {
+        chunkTrees.map(tree => {
+            const structure = Structures.createTree(tree.x, tree.y, tree.groundHeight);
+            this.generateStructure(structure, chunkGroup);
         });
     }
 
@@ -468,7 +433,7 @@ class World {
 
         // Generate trees with LOD-based density
         const chunkTrees = this.generateTreePositionsForChunk(chunkX, chunkY, lodLevel);
-        this.generateTreesInChunk(chunkGroup, chunkX, chunkY, instanceCounts, blockPositions, chunkTrees);
+        this.generateTreesInChunk(chunkGroup, chunkX, chunkY, chunkTrees);
 
         this.chunks.set(chunkKey, chunkGroup);
         this.chunkLODs.set(chunkKey, lodLevel); // Store the LOD level

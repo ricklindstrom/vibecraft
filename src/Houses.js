@@ -36,22 +36,22 @@ const Houses = {
         const foundationZ = Math.max(h11,h12,h21,h22);
 
         //Create pillars to support elevated floor
-        blocks.push(...this.createPillar(x1, y1, h11, foundationZ));
-        blocks.push(...this.createPillar(x1, y2, h12, foundationZ));
-        blocks.push(...this.createPillar(x2, y1, h21, foundationZ));
-        blocks.push(...this.createPillar(x2, y2, h22, foundationZ));
+        blocks.push(...Structures.createPillar(x1, y1, h11, foundationZ));
+        blocks.push(...Structures.createPillar(x1, y2, h12, foundationZ));
+        blocks.push(...Structures.createPillar(x2, y1, h21, foundationZ));
+        blocks.push(...Structures.createPillar(x2, y2, h22, foundationZ));
 
         //create floor
-        blocks.push(...this.createFloor(x1, y1, x2, y2, foundationZ));
+        blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ));
         
         //create walls  
-        blocks.push(...this.createXWall(x1, x2, y1, foundationZ, false, true));
-        blocks.push(...this.createXWall(x1, x2, y2, foundationZ));
-        blocks.push(...this.createYWall(y1, y2, x1, foundationZ));
-        blocks.push(...this.createYWall(y1, y2, x2, foundationZ));
+        blocks.push(...Structures.createXWall(x1, x2, y1, foundationZ, false, true));
+        blocks.push(...Structures.createXWall(x1, x2, y2, foundationZ));
+        blocks.push(...Structures.createYWall(y1, y2, x1, foundationZ));
+        blocks.push(...Structures.createYWall(y1, y2, x2, foundationZ));
         
         //create roof
-        blocks.push(...this.createRoof(x1, y1, x2, y2, foundationZ + this.wallHeight));
+        blocks.push(...Structures.createRoof(x1, y1, x2, y2, foundationZ + this.wallHeight));
 
         return {
             type: STRUCTURE_TYPES.HOUSE,
@@ -61,90 +61,8 @@ const Houses = {
                 groundHeight: foundationZ
             }
         };
-    },
-
-    createPillar(x, y, bottom, top, type = BLOCK_TYPES.WOOD) {
-        const blocks = [];
-        for(let z = bottom; z <= top; z++) { blocks.push({ x, y, z, type }); }
-        return blocks;
-    },
-
-    createFloor(x1, y1, x2, y2, z, type = BLOCK_TYPES.SAND) {
-        const blocks = [];
-        for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
-            for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
-                blocks.push({ x, y, z, type });
-            }
-        }
-        return blocks;
-    },
-
-    createXWall(x1, x2, y, foundationZ, hasWindow = true, hasDoor = false, type = BLOCK_TYPES.WOOD) {
-        const blocks = [];
-        const gapLocation = Math.floor((x1 + x2) / 2);
-        const gapBottom = hasWindow ? foundationZ + 1 : foundationZ;
-        const gapTop = foundationZ + 4;
-
-        for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
-            for (let z = foundationZ; z <= foundationZ + this.wallHeight; z++) {
-                const isCorner = (x === x1 || x == x2);
-                const isGap = (hasWindow || hasDoor ) && (z > gapBottom &&  z < gapTop && (x === gapLocation || x === gapLocation + 1));
-                if(isCorner) {
-                    blocks.push({ x, y, z, type });
-                } if(!isGap) {
-                    blocks.push({ x, y, z, type });
-                } else if(hasWindow) {
-                    blocks.push({ x, y, z, type: BLOCK_TYPES.GLASS });
-                } else if(hasDoor) {
-                    // No Op
-                }
-            }
-        }
-        return blocks;
-    },
-
-    createYWall(y1, y2, x, foundationZ, hasWindow = true, hasDoor = false, type = BLOCK_TYPES.STONE) {
-        const blocks = [];
-        const gapLocation = Math.floor((y1 + y2) / 2);
-        const gapBottom = hasWindow ? foundationZ + 1 : foundationZ;
-        const gapTop = foundationZ + 4;
-
-        for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
-            for (let z = foundationZ; z <= foundationZ + this.wallHeight; z++) {
-                const isGap = (hasWindow || hasDoor ) && (z > gapBottom &&  z < gapTop && (y === gapLocation || y === gapLocation + 1));
-                const isCorner = (y === y1 || y === y2);
-                if(!isGap) {
-                    blocks.push({ x, y, z, type });
-                } else if(hasWindow) {
-                    blocks.push({ x, y, z, type: BLOCK_TYPES.GLASS });
-                } else if(hasDoor) {
-                    // No Op
-                }
-            }
-        }
-        return blocks;
-    },
-
-    // FIXME
-    createPyramidRoof(x1, y1, x2, y2, z, type = BLOCK_TYPES.WOOD) {
-        const blocks = [];
-        for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
-            for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
-                blocks.push({ x, y, z, type });
-            }
-        }
-        return blocks;
-    },
-
-    createRoof(x1, y1, x2, y2, z, type = BLOCK_TYPES.WOOD) {
-        const blocks = [];
-        for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
-            for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
-                blocks.push({ x, y, z, type });
-            }
-        }
-        return blocks;
     }
+
 
 };
 
