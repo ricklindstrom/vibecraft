@@ -43,11 +43,11 @@ class World {
 
         // LOD settings - simplified to just distance checks
         this.LOD_LEVELS = {
-            FULL: { blockSize: 1, maxDistance: 2, treeChance: 1.0, waterDetail: 1, stoneChance: 0.9 },
-            HIGH: { blockSize: 1, maxDistance: 3, treeChance: 1.0, waterDetail: 1, stoneChance: 0.7 },
-            MEDIUM: { blockSize: 1, maxDistance: 5, treeChance: 1.0, waterDetail: 2, stoneChance: 0.4 },
-            LOW: { blockSize: 2, maxDistance: 8, treeChance: 0.3, waterDetail: 4, stoneChance: 0.2 },
-            MINIMAL: { blockSize: 4, maxDistance: 12, treeChance: 0.0, waterDetail: 8, stoneChance: 0.2 }
+            FULL: { blockSize: 1, maxDistance: 2, treeChance: 1.0, waterDetail: 1, stoneChance: 1.0 },
+            HIGH: { blockSize: 1, maxDistance: 3, treeChance: 1.0, waterDetail: 1, stoneChance: 1.0 },
+            MEDIUM: { blockSize: 1, maxDistance: 5, treeChance: 1.0, waterDetail: 2, stoneChance: 1.0 },
+            LOW: { blockSize: 2, maxDistance: 8, treeChance: 0.3, waterDetail: 4, stoneChance: 0.0 },
+            MINIMAL: { blockSize: 4, maxDistance: 12, treeChance: 0.0, waterDetail: 8, stoneChance: 0.0 }
         };
 
         this.stats = {
@@ -218,6 +218,12 @@ class World {
         ) / this.CHUNK_SIZE; // Convert to chunk units
     }
 
+
+    // Better mathmatical modulo that works for negative numbers
+    mod(x, n) {
+        return ((x % n) + n) % n;
+    }
+
     generateChunk(chunkX, chunkY, playerX, playerY) {
         const startTime = performance.now();
         const chunkKey = `${chunkX},${chunkY}`;
@@ -291,23 +297,13 @@ class World {
         }
 
 
-        // if(lodLevel === this.LOD_LEVELS.MINIMAL) {
-        //     const worldX = chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE/2;
-        //     const worldY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE/2;
-        //     const height = TerrainGenerator.getTerrainHeight(worldX, worldY) + this.CHUNK_SIZE/2;
-        //     const horizon = new THREE.Mesh(this.horizonGeometry, this.horizonMaterial);
-        //     const horizonPos = CoordinateConverter.worldToThree.position({  x: worldX, y: worldY, z: height});
-        //     horizon.position.set(horizonPos.x, horizonPos.y, horizonPos.z);
-        //     horizon.rotation.x = -Math.PI / 2;
-        //     this.scene.add(horizon);
-        // } else {
-
         // Generate terrain blocks - sample at reduced resolution based on block size
         for (let x = 0; x < this.CHUNK_SIZE; x += samplingStep) {
             for (let y = 0; y < this.CHUNK_SIZE; y += samplingStep) {
                 const worldX = chunkX * this.CHUNK_SIZE + x;
                 const worldY = chunkY * this.CHUNK_SIZE + y;
                 const height = TerrainGenerator.getTerrainHeight(worldX, worldY);
+                const isCliff = TerrainGenerator.isCliff(worldX, worldY);
 
                 const startZ = Math.floor(height);
                 const bottomZ = Math.min(-5, startZ);
@@ -317,51 +313,44 @@ class World {
 
                 for (let z = bottomZ; z <= startZ; z += zStep) {
                     let blockType;
-                    let shouldRender = true;
 
                     if (height >= 0) {
                         if (z === startZ || (z > startZ - blockSize && z <= startZ)) {
                             blockType = BLOCK_TYPES.GRASS;
-                        } else if (z > startZ - 2 * blockSize) {
+                        } else if (isCliff && z > startZ - 2 * blockSize) {
                             blockType = BLOCK_TYPES.DIRT;
-                        } else {
+                        } else if(isCliff) {
                             blockType = BLOCK_TYPES.STONE;
-                            // Apply stone chance based on LOD
-                            shouldRender = Math.random() < lodLevel.stoneChance;
                         }
                     } else {
                         if(z === startZ || (z > startZ - blockSize && z <= startZ)) {
                             blockType = BLOCK_TYPES.SAND;
-                        } else {
+                        } else if(isCliff) {
                             blockType = BLOCK_TYPES.STONE;
-                            // Apply stone chance based on LOD for underwater stones too
-                            shouldRender = Math.random() < lodLevel.stoneChance;
                         }
                     }
 
-                    if (shouldRender) {
-                        blockCount++;
-                        if (!instanceCounts.has(blockType)) {
-                            instanceCounts.set(blockType, 0);
-                            blockPositions.set(blockType, []);
-                        }
-
-                        // Position the center of larger blocks correctly
-                        const blockCenterOffset = (blockSize - 1) / 2;
-                        const worldPos = { 
-                            x: worldX + blockCenterOffset, 
-                            y: worldY + blockCenterOffset, 
-                            z: z + blockCenterOffset 
-                        };
-                        const threePos = CoordinateConverter.worldToThree.position(worldPos);
-                        blockPositions.get(blockType).push({...threePos, blockSize});
-                        instanceCounts.set(blockType, instanceCounts.get(blockType) + 1);
+                    blockCount++;
+                    if (!instanceCounts.has(blockType)) {
+                        instanceCounts.set(blockType, 0);
+                        blockPositions.set(blockType, []);
                     }
+
+                    // Position the center of larger blocks correctly
+                    const blockCenterOffset = (blockSize - 1) / 2;
+                    const worldPos = { 
+                        x: worldX + blockCenterOffset, 
+                        y: worldY + blockCenterOffset, 
+                        z: z + blockCenterOffset 
+                    };
+                    const threePos = CoordinateConverter.worldToThree.position(worldPos);
+                    blockPositions.get(blockType).push({...threePos, blockSize});
+                    instanceCounts.set(blockType, instanceCounts.get(blockType) + 1);
                 }
             }
         }
 
-        if (chunkX === chunkY && blockSize === 1) { // Only build houses on high-detail chunks
+        if ((this.mod(chunkX, 100) < 4 && this.mod(chunkY, 100) < 4) && blockSize === 1) { // Only build houses on high-detail chunks
             const centerX = chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
             const centerY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
             if(Houses.isBuildable(centerX, centerY)) {

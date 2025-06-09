@@ -14,12 +14,12 @@
  - [X] CHUNKS: Create a minimap showing chunk debug info
  - [X] LOD: Use larger block sizes for distant chunks
  - [X] STRUCTURES: Relocate tree creation out of world class
- - [ ] TERRAIN + PERF: Only create subsurface blocks if the terrain is sufficently sloped
- - [ ] LOD: Don't evict chunks for dropping one LOD level
+ - [X] TERRAIN + PERF: Only create subsurface blocks if the terrain is sufficently sloped
+ - [X] TERRAIN CALC + STRUCTURES: Add support for terrain overrides to support player collision for strutures.
  - [ ] CHUNKS: Use frustum to determine which chunks to load
+ - [ ] LOD: Don't evict chunks for dropping one LOD level
  - [ ] POLISH: Add detail to blocks.
  - [ ] TERRAIN CALC: Add proper smoothing to spline function.
- - [ ] TERRAIN CALC + STRUCTURES: Add support for terrain overrides to support player collision for strutures.
  - [ ] STRUCTURES: Add castles.
  - [ ] STUUCTURES: Add roads.
  - [ ] STRUCTURES: Create house building system (L-System)?
@@ -28,3 +28,4 @@
  - [ ] POLISH: Rotate minimap to align with direction of player.
  - [ ] TERRAIN CALC: Improve perlin noise function to make more natural terrain.
  - [ ] TERRAIN DISP: Allow swiching between displaying surfaces and blocks
+ - [ ] STRUCTURES + TERRAIN: Support multple levels of terrain overrides to support multi-story buildings

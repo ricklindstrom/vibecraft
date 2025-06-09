@@ -15,6 +15,17 @@ const TerrainGenerator = {
         return (n1 + n2 * 0.5 + n3 * 0.25) * amplitude;
     },
 
+
+    // If the slope is greater than 1, then it is a cliff
+    isCliff(x, y) {
+        const current = this.getTerrainHeight(x, y);
+        if(current > this.getTerrainHeight(x + 1, y) + 1) return true;
+        if(current > this.getTerrainHeight(x - 1, y) + 1) return true;
+        if(current > this.getTerrainHeight(x, y + 1) + 1) return true;
+        if(current > this.getTerrainHeight(x, y - 1) + 1) return true;
+        return false;
+     },
+
     // Linear interpolation
     lerp(a, b, t) { return a + (b - a) * t; },
 

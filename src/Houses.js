@@ -1,7 +1,6 @@
 //const { BLOCK_TYPES } = require("./World");
 
 const Houses = {
-    wallHeight: 5,
 
     isBuildable(x, y) {
         const x1 = x - 5;
@@ -20,7 +19,7 @@ const Houses = {
         return diff < 7 && lowest >= 0;
     },
 
-    createHouse(centerX, centerY, size = 10) {
+    createHouse(centerX, centerY, size = 10, wallHeight = 5) {
         const blocks = [];
 
         const x1 = centerX - Math.floor(size / 2);
@@ -34,6 +33,7 @@ const Houses = {
         const h22 = TerrainGenerator.getTerrainHeight(x2, y2);
 
         const foundationZ = Math.max(h11,h12,h21,h22);
+        const porch = 4;
 
         //Create pillars to support elevated floor
         blocks.push(...Structures.createPillar(x1, y1, h11, foundationZ));
@@ -42,16 +42,16 @@ const Houses = {
         blocks.push(...Structures.createPillar(x2, y2, h22, foundationZ));
 
         //create floor
-        blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ));
+        blocks.push(...Structures.createFloor(x1, y1 - porch, x2, y2, foundationZ));
         
         //create walls  
-        blocks.push(...Structures.createXWall(x1, x2, y1, foundationZ, false, true));
+        blocks.push(...Structures.createXWall(x1, x2, y1, foundationZ, false, true)); //Door Here
         blocks.push(...Structures.createXWall(x1, x2, y2, foundationZ));
         blocks.push(...Structures.createYWall(y1, y2, x1, foundationZ));
         blocks.push(...Structures.createYWall(y1, y2, x2, foundationZ));
         
         //create roof
-        blocks.push(...Structures.createRoof(x1, y1, x2, y2, foundationZ + this.wallHeight));
+        blocks.push(...Structures.createPyramidRoof(x1, y1, x2, y2, foundationZ + wallHeight));
 
         return {
             type: STRUCTURE_TYPES.HOUSE,

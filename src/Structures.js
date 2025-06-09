@@ -3,6 +3,29 @@
 const Structures = {
     wallHeight: 5,
 
+    terrainOverrides : [],   // → [{ xMin, xMax, yMin, yMax, height }, ...]
+
+    addTerrainOverride(x1, y1, x2, y2, fixedHeight) {
+        this.terrainOverrides.push({
+            xMin: Math.min(x1, x2),
+            xMax: Math.max(x1, x2),
+            yMin: Math.min(y1, y2),
+            yMax: Math.max(y1, y2),
+            height: fixedHeight
+        });
+    },
+
+    getTerrainOverride(x, y) {
+        // Walk backwards so the most recently added rectangle “wins” on overlap.
+        for (let i = this.terrainOverrides.length - 1; i >= 0; i--) {
+            const r = this.terrainOverrides[i];
+            if (x >= r.xMin && x <= r.xMax && y >= r.yMin && y <= r.yMax) {
+            return r.height;
+            }
+        }
+        return undefined;
+    },
+
     isBuildable(x, y) {
         const x1 = x - 5;
         const x2 = x + 5;
@@ -105,6 +128,7 @@ const Structures = {
                 blocks.push({ x, y, z, type });
             }
         }
+        this.addTerrainOverride(x1, y1, x2, y2, z);
         return blocks;
     },
 
@@ -154,13 +178,18 @@ const Structures = {
         return blocks;
     },
 
-    // FIXME
+    
     createPyramidRoof(x1, y1, x2, y2, z, type = BLOCK_TYPES.WOOD) {
         const blocks = [];
-        for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
-            for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
-                blocks.push({ x, y, z, type });
-            }
+
+        const startY = Math.min(y1, y2);
+        const stopY = Math.max(y1, y2);
+        const startX = Math.min(x1, x2);
+        const stopX = Math.max(x1, x2);
+        const layers = Math.ceil((stopY - startY) / 2);
+
+        for(let layer = z; layer < z + layers; layer++) {        
+            blocks.push(...this.createRoof(x1++, y1++, x2--, y2--, layer, type = BLOCK_TYPES.WOOD));
         }
         return blocks;
     },
