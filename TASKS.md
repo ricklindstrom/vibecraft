@@ -21,7 +21,7 @@
  - [ ] POLISH: Add detail to blocks.
  - [ ] TERRAIN CALC: Add proper smoothing to spline function.
  - [ ] STRUCTURES: Add castles.
- - [ ] STUUCTURES: Add roads.
+ - [ ] STRUCTURES: Add roads.
  - [ ] STRUCTURES: Create house building system (L-System)?
  - [ ] TERRAIN CALC + STRUCTURES: Add terrain rating score for home building to identify good locations for building houses/castles. (Flat near water? Tops of hills?)
  - [ ] POLISH: Add cloud layer

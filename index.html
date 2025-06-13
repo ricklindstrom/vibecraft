@@ -78,6 +78,7 @@
             Spacebar: Jump (Fly)<br>
             -/+: Make Flatter/Hillier<br>
             M: Toggle Minimap<br>
+            P: Toggle Player Info<br>
             ~: Toggle Debug panel
         </div>
     </div>
@@ -259,12 +260,18 @@
             // Increase terrain amplitude with + or =
             if (event.key === '+' || event.key === '=') {
                 TerrainGenerator.amplitude = Math.min(5, TerrainGenerator.amplitude + 0.1);
+                if (typeof Structures !== 'undefined' && Structures.resetTerrainOverrides) {
+                    Structures.resetTerrainOverrides();
+                }
                 clearAndRegenerateWorld();
             }
 
             // Decrease terrain amplitude with - or _
             if (event.key === '-' || event.key === '_') {
                 TerrainGenerator.amplitude = Math.max(0, TerrainGenerator.amplitude - 0.1);
+                if (typeof Structures !== 'undefined' && Structures.resetTerrainOverrides) {
+                    Structures.resetTerrainOverrides();
+                }
                 clearAndRegenerateWorld();
             }
 
@@ -573,6 +580,7 @@ World Stats:
     Water planes: ${stats.waterPlanesRendered}
     Trees: ${showTrees ? stats.treesGenerated : 'Hidden'}
     Amplitude: ${TerrainGenerator.amplitude.toFixed(2)}
+    Terrain overrides: ${typeof Structures !== 'undefined' && Structures.terrainOverrides ? Structures.terrainOverrides.length : 0}
 
 Performance:
   Last chunk gen: ${stats.lastChunkGenTime.toFixed(1)}ms
@@ -585,13 +593,6 @@ Player Physics:
   Jump velocity: ${player.jumpVelocity.toFixed(3)}
   On ground: ${player.onGround}
   Movement vector: (${player.velocity.x.toFixed(2)}, ${player.velocity.y.toFixed(2)})
-
-Controls:
-  F: Toggle FPS
-  M: Toggle minimap
-  P: Toggle player info
-  ~: Toggle debug
-  + / -: Change terrain amplitude
 
 Press '~' to close`;
             }

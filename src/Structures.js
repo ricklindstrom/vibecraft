@@ -3,9 +3,29 @@
 const Structures = {
     wallHeight: 5,
 
+    STYLES : {
+        WOOD: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.WOOD, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD },
+        STONE: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE },
+        WOOD_STONE: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD },
+        STONE_WOOD: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.WOOD, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE },
+        STONE_GLASS: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE },
+        //WOOD_LEAVES: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.LEAVES, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD },
+        //LEAVES_WOOD: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.WOOD, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD },
+        //LEAVES_STONE: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE },
+        //LEAVES_SAND: { trim: BLOCK_TYPES.SAND, wall: BLOCK_TYPES.SAND, roof: BLOCK_TYPES.SAND, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.SAND, pillar: BLOCK_TYPES.SAND },
+    },
+
+
     terrainOverrides : [],   // → [{ xMin, xMax, yMin, yMax, height }, ...]
 
+
+    resetTerrainOverrides() {
+        this.terrainOverrides = [];
+    },
+
     addTerrainOverride(x1, y1, x2, y2, fixedHeight) {
+        if(this.getTerrainOverride(x1, y1) === fixedHeight) return;
+        
         this.terrainOverrides.push({
             xMin: Math.min(x1, x2),
             xMax: Math.max(x1, x2),
@@ -16,7 +36,7 @@ const Structures = {
     },
 
     getTerrainOverride(x, y) {
-        // Walk backwards so the most recently added rectangle “wins” on overlap.
+        // Walk backwards so the most recently added rectangle "wins" on overlap.
         for (let i = this.terrainOverrides.length - 1; i >= 0; i--) {
             const r = this.terrainOverrides[i];
             if (x >= r.xMin && x <= r.xMax && y >= r.yMin && y <= r.yMax) {
@@ -72,48 +92,6 @@ const Structures = {
     },
 
 
-    createHouse(centerX, centerY, size = 10) {
-        const blocks = [];
-
-        const x1 = centerX - Math.floor(size / 2);
-        const x2 = centerX + Math.floor(size / 2);
-        const y1 = centerY - Math.floor(size / 2);
-        const y2 = centerY + Math.floor(size / 2);
-
-        const h11 = TerrainGenerator.getTerrainHeight(x1, y1);
-        const h12 = TerrainGenerator.getTerrainHeight(x1, y2);
-        const h21 = TerrainGenerator.getTerrainHeight(x2, y1);
-        const h22 = TerrainGenerator.getTerrainHeight(x2, y2);
-
-        const foundationZ = Math.max(h11,h12,h21,h22);
-
-        //Create pillars to support elevated floor
-        blocks.push(...this.createPillar(x1, y1, h11, foundationZ));
-        blocks.push(...this.createPillar(x1, y2, h12, foundationZ));
-        blocks.push(...this.createPillar(x2, y1, h21, foundationZ));
-        blocks.push(...this.createPillar(x2, y2, h22, foundationZ));
-
-        //create floor
-        blocks.push(...this.createFloor(x1, y1, x2, y2, foundationZ));
-        
-        //create walls  
-        blocks.push(...this.createXWall(x1, x2, y1, foundationZ, false, true));
-        blocks.push(...this.createXWall(x1, x2, y2, foundationZ));
-        blocks.push(...this.createYWall(y1, y2, x1, foundationZ));
-        blocks.push(...this.createYWall(y1, y2, x2, foundationZ));
-        
-        //create roof
-        blocks.push(...this.createRoof(x1, y1, x2, y2, foundationZ + this.wallHeight));
-
-        return {
-            type: STRUCTURE_TYPES.HOUSE,
-            blocks: blocks,
-            metadata: {
-                //height: height,
-                groundHeight: foundationZ
-            }
-        };
-    },
 
     createPillar(x, y, bottom, top, type = BLOCK_TYPES.WOOD) {
         const blocks = [];
@@ -156,7 +134,7 @@ const Structures = {
         return blocks;
     },
 
-    createYWall(y1, y2, x, foundationZ, hasWindow = true, hasDoor = false, type = BLOCK_TYPES.STONE) {
+    createYWall(y1, y2, x, foundationZ, hasWindow = true, hasDoor = false, type = BLOCK_TYPES.GLASS) {
         const blocks = [];
         const gapLocation = Math.floor((y1 + y2) / 2);
         const gapBottom = hasWindow ? foundationZ + 1 : foundationZ;
@@ -178,7 +156,7 @@ const Structures = {
         return blocks;
     },
 
-    
+    // Actually creates a Hip roof. See https://primeroofingfl.com/blog/gable-roofs-info/ 
     createPyramidRoof(x1, y1, x2, y2, z, type = BLOCK_TYPES.WOOD) {
         const blocks = [];
 
