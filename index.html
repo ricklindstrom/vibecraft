@@ -362,8 +362,7 @@
             player.position.z += player.jumpVelocity;
             
             // Ground collision
-
-            const overrideHeight = Structures.getTerrainOverride( Math.floor(player.position.x), Math.floor(player.position.y) );
+            const overrideHeight = Structures.getTerrainOverrideForZ( Math.floor(player.position.x), Math.floor(player.position.y), player.position.z );
    
             const surfaceHeight = overrideHeight || TerrainGenerator.getTerrainHeight(
                 Math.floor(player.position.x),
@@ -415,7 +414,8 @@
             // Draw terrain heights
             for (let worldX = startX; worldX < endX; worldX += MINIMAP_SCALE) {
                 for (let worldY = startY; worldY < endY; worldY += MINIMAP_SCALE) {
-                    const height = TerrainGenerator.getTerrainHeight(worldX, worldY);
+                    //Mark stuctures as blue
+                    const height = Structures.getTerrainOverride(worldX, worldY) / 10 - 10 || TerrainGenerator.getTerrainHeight(worldX, worldY);
                     
                     // Convert world coordinates to minimap coordinates
                     const mapX = ((worldX - startX) / MINIMAP_SCALE);

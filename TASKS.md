@@ -16,7 +16,9 @@
  - [X] STRUCTURES: Relocate tree creation out of world class
  - [X] TERRAIN + PERF: Only create subsurface blocks if the terrain is sufficently sloped
  - [X] TERRAIN CALC + STRUCTURES: Add support for terrain overrides to support player collision for strutures.
- - [X] STRUCTURES: Make houses with different styles?
+ - [X] STRUCTURES: Make houses with different styles
+ - [X] STRUCTURES + TERRAIN: Support multple levels of terrain overrides to support multi-story buildings
+ - [X] STRUCTURES: Don't add trees where structures are located..
  - [ ] TERRAIN DISP: Allow swiching between displaying surfaces and blocks
  - [ ] CHUNKS: Use frustum to determine which chunks to load
  - [ ] LOD: Don't evict chunks for dropping one LOD level
@@ -24,9 +26,9 @@
  - [ ] TERRAIN CALC: Add proper smoothing to spline function.
  - [ ] STRUCTURES: Add castles.
  - [ ] STRUCTURES: Add roads.
- - [ ] STRUCTURES: Create house building system (L-System)?
+ - [ ] STRUCTURES: Create advanced house building system (L-System)?
  - [ ] TERRAIN CALC + STRUCTURES: Add terrain rating score for home building to identify good locations for building houses/castles. (Flat near water? Tops of hills?)
  - [ ] POLISH: Add cloud layer
  - [ ] POLISH: Rotate minimap to align with direction of player.
  - [ ] TERRAIN CALC: Improve perlin noise function to make more natural terrain.
-  - [ ] STRUCTURES + TERRAIN: Support multple levels of terrain overrides to support multi-story buildings
+ 

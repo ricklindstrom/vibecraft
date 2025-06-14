@@ -154,6 +154,15 @@ class World {
         const chunkTrees = [];
         const treesPerChunk = Math.floor(300 / (this.RENDER_DISTANCE * this.RENDER_DISTANCE * 4));
 
+        //If there is a terrain override for chunk, then can't place trees there.
+        //const centerX = chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
+        //const centerY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
+        // const overrideHeight = Structures.getTerrainOverride(centerX, centerY);
+        // if(overrideHeight) {
+        //      // If there is a terrain override, then we can't place trees there.
+        //     return chunkTrees; 
+        // }
+
         const random = (x, y) => {
             const a = ((x * 1231) + (y * 5897)) % 123456789;
             // Mix the bits using XOR and shifts
@@ -175,7 +184,9 @@ class World {
 
             // Apply LOD-based tree chance
             if (height > 0 && random(worldX, worldY) < lodLevel.treeChance) {
-                chunkTrees.push({ x: worldX, y: worldY, groundHeight: height });
+                if(!Structures.getTerrainOverride(worldX, worldY)) {
+                    chunkTrees.push({ x: worldX, y: worldY, groundHeight: height });
+                }
             }
         }
 
@@ -350,14 +361,14 @@ class World {
             }
         }
 
-        if ((this.mod(chunkX, 100) < 4 && this.mod(chunkY, 100) < 4) && blockSize === 1) { // Only build houses on high-detail chunks
+        //if ((this.mod(chunkX, 10) < 4 && this.mod(chunkY, 10) < 4) && blockSize === 1) { // Only build houses on high-detail chunks
             const centerX = chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
             const centerY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
-            if(Houses.isBuildable(centerX, centerY)) {
+            if(Houses.isBuildable(chunkX, chunkY, centerX, centerY)) {
                 let houseStructure = Houses.createHouse(centerX, centerY);
                 this.generateStructure(houseStructure, chunkGroup);
             }
-        }
+        //}
 
         // Create instanced meshes for terrain blocks - group by block size
         const blocksBySize = new Map();
@@ -385,6 +396,13 @@ class World {
                 geometry = this.blockGeometry4x;
             }
 
+            // This loop creates instanced meshes for each block type and size.
+            // It also sets the matrix for each instance, which is used to position the blocks in the world.
+            // It also sets the material for each instance, which is used to color the blocks.
+            // It also sets the shadow settings for each instance, which is used to cast and receive shadows.
+            // It also sets the instance matrix needs update flag, which is used to update the matrix for each instance.
+            // It also adds the instanced mesh to the chunk group.
+            // It also updates the instance matrix needs update flag.
             for (const [blockType, positions] of blockTypeMap) {
                 if (positions.length > 0) {
                     const material = Array.isArray(this.materials[blockType])

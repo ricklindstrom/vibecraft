@@ -49,6 +49,23 @@ const Structures = {
         return undefined;
     },
 
+    getTerrainOverrideForZ(x, y, z) {
+        // Walk backwards so the most recently added rectangle "wins" on overlap.
+        for (let i = this.terrainOverrides.length - 1; i >= 0; i--) {
+            const r = this.terrainOverrides[i];
+            if (x >= r.xMin && x <= r.xMax && y >= r.yMin && y <= r.yMax) {
+                if(z >= r.height) { 
+                    // If the z is greater than the override, then we can use the override
+                    return r.height;
+                } else {
+                    // If the z is less than the override height, then we can ignore the override
+                }
+            }
+        }
+        return undefined;
+    },
+
+    
     isBuildable(x, y) {
         const x1 = x - 5;
         const x2 = x + 5;
