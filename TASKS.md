@@ -16,6 +16,7 @@
  - [X] STRUCTURES: Relocate tree creation out of world class
  - [X] TERRAIN + PERF: Only create subsurface blocks if the terrain is sufficently sloped
  - [X] TERRAIN CALC + STRUCTURES: Add support for terrain overrides to support player collision for strutures.
+ - [X] STRUCTURES: Make houses with different styles(L-System)?
  - [ ] CHUNKS: Use frustum to determine which chunks to load
  - [ ] LOD: Don't evict chunks for dropping one LOD level
  - [ ] POLISH: Add detail to blocks.

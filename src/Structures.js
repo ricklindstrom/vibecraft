@@ -1,14 +1,13 @@
-//const { BLOCK_TYPES } = require("./World");
 
 const Structures = {
     wallHeight: 5,
 
     STYLES : {
-        WOOD: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.WOOD, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD },
-        STONE: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE },
-        WOOD_STONE: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD },
-        STONE_WOOD: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.WOOD, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE },
-        STONE_GLASS: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE },
+        WOOD: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.WOOD, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD, roofType: 'PYRAMID' },
+        STONE: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE, roofType: 'PYRAMID' },
+        WOOD_STONE: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD, roofType: 'PYRAMID' },
+        STONE_WOOD: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.WOOD, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE, roofType: 'PYRAMID' },
+        STONE_GLASS: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE, roofType: 'PYRAMID' },
         //WOOD_LEAVES: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.LEAVES, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD },
         //LEAVES_WOOD: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.WOOD, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD },
         //LEAVES_STONE: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE },
@@ -110,7 +109,7 @@ const Structures = {
         return blocks;
     },
 
-    createXWall(x1, x2, y, foundationZ, hasWindow = true, hasDoor = false, type = BLOCK_TYPES.WOOD) {
+    createXWall(x1, x2, y, foundationZ, hasWindow = true, hasDoor = false, style = STYLES.WOOD) {
         const blocks = [];
         const gapLocation = Math.floor((x1 + x2) / 2);
         const gapBottom = hasWindow ? foundationZ + 1 : foundationZ;
@@ -121,9 +120,9 @@ const Structures = {
                 const isCorner = (x === x1 || x == x2);
                 const isGap = (hasWindow || hasDoor ) && (z > gapBottom &&  z < gapTop && (x === gapLocation || x === gapLocation + 1));
                 if(isCorner) {
-                    blocks.push({ x, y, z, type });
+                    blocks.push({ x, y, z, type: style.trim });
                 } if(!isGap) {
-                    blocks.push({ x, y, z, type });
+                    blocks.push({ x, y, z, type: style.wall });
                 } else if(hasWindow) {
                     blocks.push({ x, y, z, type: BLOCK_TYPES.GLASS });
                 } else if(hasDoor) {
@@ -134,7 +133,7 @@ const Structures = {
         return blocks;
     },
 
-    createYWall(y1, y2, x, foundationZ, hasWindow = true, hasDoor = false, type = BLOCK_TYPES.GLASS) {
+    createYWall(y1, y2, x, foundationZ, hasWindow = true, hasDoor = false, style = STYLES.WOOD_STONE) {
         const blocks = [];
         const gapLocation = Math.floor((y1 + y2) / 2);
         const gapBottom = hasWindow ? foundationZ + 1 : foundationZ;
@@ -144,8 +143,10 @@ const Structures = {
             for (let z = foundationZ; z <= foundationZ + this.wallHeight; z++) {
                 const isGap = (hasWindow || hasDoor ) && (z > gapBottom &&  z < gapTop && (y === gapLocation || y === gapLocation + 1));
                 const isCorner = (y === y1 || y === y2);
-                if(!isGap) {
-                    blocks.push({ x, y, z, type });
+                if(isCorner) {
+                    blocks.push({ x, y, z, type:style.trim });
+                } else if(!isGap) {
+                    blocks.push({ x, y, z, type:style.wall });
                 } else if(hasWindow) {
                     blocks.push({ x, y, z, type: BLOCK_TYPES.GLASS });
                 } else if(hasDoor) {
@@ -164,10 +165,24 @@ const Structures = {
         const stopY = Math.max(y1, y2);
         const startX = Math.min(x1, x2);
         const stopX = Math.max(x1, x2);
-        const layers = Math.ceil((stopY - startY) / 2);
+        const width = stopX - startX;
+        const depth = stopY - startY;
+        const layers = Math.ceil(Math.max(width, depth) / 2);
 
-        for(let layer = z; layer < z + layers; layer++) {        
-            blocks.push(...this.createRoof(x1++, y1++, x2--, y2--, layer, type = BLOCK_TYPES.WOOD));
+        for(let layer = 0; layer <= layers; layer++) {
+            const layerZ = z + layer;
+            const xOffset = layer;
+            const yOffset = layer;
+            
+            // Create the edges of the roof for this layer
+            for (let x = startX + xOffset; x <= stopX - xOffset; x++) {
+                blocks.push({ x, y: startY + yOffset, z: layerZ, type });
+                blocks.push({ x, y: stopY - yOffset, z: layerZ, type });
+            }
+            for (let y = startY + yOffset; y <= stopY - yOffset; y++) {
+                blocks.push({ x: startX + xOffset, y, z: layerZ, type });
+                blocks.push({ x: stopX - xOffset, y, z: layerZ, type });
+            }
         }
         return blocks;
     },
@@ -186,7 +201,7 @@ const Structures = {
 
 // Support both browser and Node.js environments
 if (typeof window !== 'undefined') {
-    window.Houses = Houses;
+    window.Structures = Structures;
 } else {
-    module.exports = Houses;
+    module.exports = Structures;
 } 
