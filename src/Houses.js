@@ -2,6 +2,10 @@
 const Houses = {
 
     isBuildable(x, y) {
+        // Only build on even chunks
+        //handle modulos of negative chunks
+        //if(chunkX % 2 !== 0 || chunkY % 2 !== 0) return false;
+        
         const x1 = x - 5;
         const x2 = x + 5;
         const y1 = y - 5;
@@ -66,9 +70,12 @@ const Houses = {
         blocks.push(...Structures.createYWall(y1, y2, x1, foundationZ, true, false, style));
         blocks.push(...Structures.createYWall(y1, y2, x2, foundationZ, true, false, style));
 
-
         //create roof
-        blocks.push(...Structures.createPyramidRoof(x1, y1, x2, y2, foundationZ + Structures.wallHeight, style.roof));
+        if(style.roofType === 'PYRAMID') {
+            blocks.push(...Structures.createPyramidRoof(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style.roof));
+        } else if(style.roofType === 'FLAT') {
+            blocks.push(...Structures.createRoof(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style.roof));
+        }
 
         return {
             type: STRUCTURE_TYPES.HOUSE,
