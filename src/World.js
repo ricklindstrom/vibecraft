@@ -9,13 +9,6 @@ const BLOCK_TYPES = {
     GLASS: 6
 };
 
-// Structure definition format
-const STRUCTURE_TYPES = {
-    TREE: 'tree',
-    HOUSE: 'house',
-    RUIN: 'ruin'
-};
-
 // Structure generation result format
 /**
  * @typedef {Object} BlockPosition
@@ -27,9 +20,7 @@ const STRUCTURE_TYPES = {
 
 /**
  * @typedef {Object} Structure
- * @property {string} type - Structure type from STRUCTURE_TYPES
  * @property {BlockPosition[]} blocks - Array of blocks making up the structure
- * @property {Object} metadata - Additional structure-specific data
  */
 
 class World {
@@ -195,8 +186,8 @@ class World {
 
     generateTreesInChunk(chunkGroup, chunkX, chunkY, chunkTrees) {
         chunkTrees.map(tree => {
-            const structure = Structures.createTree(tree.x, tree.y, tree.groundHeight);
-            this.generateStructure(structure, chunkGroup);
+            const treeBlocks = Structures.createTree(tree.x, tree.y, tree.groundHeight);
+            this.generateBlocks(treeBlocks, chunkGroup);
         });
     }
 
@@ -365,8 +356,8 @@ class World {
             const centerX = chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
             const centerY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
             if(Houses.isBuildable(chunkX, chunkY, centerX, centerY)) {
-                let houseStructure = Houses.createHouse(centerX, centerY);
-                this.generateStructure(houseStructure, chunkGroup);
+                let houseBlocks = Houses.createHouse(centerX, centerY);
+                this.generateBlocks(houseBlocks, chunkGroup);
             }
         //}
 
@@ -508,27 +499,23 @@ class World {
     }
 
     /**
-     * Generates a structure in the world from a collection of block positions
-     * @param {Structure} structure - The structure to generate
+     * Generates a blocks in the world from a collection of block positions
+     * @param {blocks} blocks - The blocks to generate
      * @param {THREE.Group} targetGroup - The group to add the structure to
      * @returns {Map<number, THREE.InstancedMesh>} Map of block types to their instance meshes
      */
-    generateStructure(structure, targetGroup) {
+    generateBlocks(blocks, targetGroup) {
         const blockCounts = new Map();
         const blockPositions = new Map();
 
         // Count blocks by type and collect positions
-        for (const block of structure.blocks) {
+        for (const block of blocks) {
             if (!blockCounts.has(block.type)) {
                 blockCounts.set(block.type, 0);
                 blockPositions.set(block.type, []);
             }
 
-            const worldPos = {
-                x: block.x,
-                y: block.y,
-                z: block.z
-            };
+            const worldPos = { x: block.x, y: block.y, z: block.z };
             const threePos = CoordinateConverter.worldToThree.position(worldPos);
             blockPositions.get(block.type).push(threePos);
             blockCounts.set(block.type, blockCounts.get(block.type) + 1);

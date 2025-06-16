@@ -1,4 +1,3 @@
-
 const Houses = {
 
     // Better mathmatical modulo that works for negative numbers
@@ -25,12 +24,19 @@ const Houses = {
         const diff = highest - lowest;
         if(diff > 7 || lowest < 0) return false;
 
-        return this.random(chunkX, chunkY) > 0.8
+        return this.random(chunkX, chunkY) > 0.5 && this.random(chunkY, chunkX) > 0.5
     },
 
-    //Hash-based stable random number between 0 and 1
+    //Hash-based stable random number between 0 and 1 (NOT VERY GOOD?)
     random(x, y) {
-        return Math.abs(Math.floor(x * 73856093 + y * 19349663)) % 100000 / 100000;
+        return Math.abs(Math.floor(x * 19349663 + y * 73856093)) % 100000 / 100000;
+    },
+
+    getRandomStyle(x, y) {
+        const styleKeys = Object.keys(Structures.STYLES);
+        const crazynum = Math.abs((x & 0xFFFF) * 73856093 + (y & 0xFFFF) * 19349663);
+        const hash = (crazynum & 0xFFFFFFFF) % styleKeys.length;
+        return Structures.STYLES[styleKeys[hash]];
     },
 
     /**
@@ -43,14 +49,14 @@ const Houses = {
      * @returns {Structure}
      */
     createHouse(centerX, centerY, size = 10, style = undefined) {
-        // Deterministic style selection if not provided
-        if (!style) {
-            const styleKeys = Object.keys(Structures.STYLES);
-            // Simple hash function for deterministic style selection
-            const hash = Math.abs(Math.floor(centerX * 73856093 + centerY * 19349663)) % styleKeys.length;
-            style = Structures.STYLES[styleKeys[hash]];
-        }
         const blocks = [];
+
+        if (!style) {
+            style = this.getRandomStyle(centerX, centerY);
+            if(!style) {
+                return blocks;
+            }
+        }
 
         const sizeX = Math.floor(size * 1 * (1 + this.random(centerX + 10, centerY + 20)));
         const sizeY = Math.floor(size * 1 * (1 + this.random(centerX + 100, centerY - 20)));
@@ -92,14 +98,7 @@ const Houses = {
             blocks.push(...Structures.createHouse(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style.roof));
         }
 
-        return {
-            type: STRUCTURE_TYPES.HOUSE,
-            blocks: blocks,
-            metadata: {
-                groundHeight: foundationZ,
-                style: style
-            }
-        };
+        return blocks;
     },
 
 

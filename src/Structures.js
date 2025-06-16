@@ -7,20 +7,22 @@ const Structures = {
     },
 
     STYLES : {
-        WOOD: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.WOOD, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD, roofType: 'PYRAMID' },
-        STONE: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE, roofType: 'PYRAMID' },
-        WOOD_STONE: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD, roofType: 'PYRAMID' },
-        STONE_WOOD: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.WOOD, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE, roofType: 'PYRAMID' },
-        STONE_GLASS: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE, roofType: 'FLAT' },
+        MARBLE:     { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.MARBLE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.MARBLE, pillar: BLOCK_TYPES.MARBLE, roofType: 'PYRAMID' },
+        WOOD:       { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD,   pillar: BLOCK_TYPES.WOOD,   roofType: 'PYRAMID' },
+        STONE:      { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE,  pillar: BLOCK_TYPES.STONE,  roofType: 'PYRAMID' },
+        WOOD_STONE: { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD,   pillar: BLOCK_TYPES.WOOD,   roofType: 'PYRAMID' },
+        STONE_WOOD: { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE,  pillar: BLOCK_TYPES.STONE,  roofType: 'PYRAMID' },
+        STONE_GLASS: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE,  pillar: BLOCK_TYPES.STONE,  roofType: 'FLAT' },
+        MARBLE2:    { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.GLASS, window: BLOCK_TYPES.GRASS, door: BLOCK_TYPES.MARBLE, pillar: BLOCK_TYPES.MARBLE, roofType: 'FLAT' },
+        WOOD2:      { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.GLASS,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD,   pillar: BLOCK_TYPES.WOOD,   roofType: 'PYRAMID' },
+        WOOD3:      { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.WOOD,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD,   pillar: BLOCK_TYPES.WOOD,   roofType: 'PYRAMID' },
         //WOOD_LEAVES: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.LEAVES, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD },
         //LEAVES_WOOD: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.WOOD, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD },
         //LEAVES_STONE: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE },
         //LEAVES_SAND: { trim: BLOCK_TYPES.SAND, wall: BLOCK_TYPES.SAND, roof: BLOCK_TYPES.SAND, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.SAND, pillar: BLOCK_TYPES.SAND },
-    },
-
+    }, 
 
     terrainOverrides : [],   // → [{ xMin, xMax, yMin, yMax, height }, ...]
-
 
     resetTerrainOverrides() {
         this.terrainOverrides = [];
@@ -101,14 +103,9 @@ const Structures = {
             }
         }
 
-        return {
-            type: STRUCTURE_TYPES.TREE,
-            blocks: blocks,
-            metadata: {
-                height: trunkHeight,
-                groundHeight: groundHeight
-            }
-        };
+        //Structures.addTerrainOverride(x - 2, y - 2, x + 2, y + 2, leavesBaseZ + 1);
+
+        return blocks;
     },
 
 
@@ -188,13 +185,13 @@ const Structures = {
         const stopX = Math.max(x1, x2);
         const width = stopX - startX;
         const depth = stopY - startY;
-        const layers = Math.ceil(Math.max(width, depth) / 2);
+        const layers = Math.ceil(Math.min(width, depth) / 2);
 
         for(let layer = 0; layer <= layers; layer++) {
             const layerZ = z + layer;
             const xOffset = layer;
             const yOffset = layer;
-            
+
             // Create the edges of the roof for this layer
             for (let x = startX + xOffset; x <= stopX - xOffset; x++) {
                 blocks.push({ x, y: startY + yOffset, z: layerZ, type });
