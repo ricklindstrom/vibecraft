@@ -8,6 +8,7 @@ const terrainHeightCache = new Map();
 // TerrainGenerator implementation
 const TerrainGenerator = {
     amplitude: 1.0, // Controls overall terrain height
+
     simpleNoise(x, z, scale = 0.1, amplitude = 3) {
         const n1 = Math.sin(x * scale) * Math.cos(z * scale);
         const n2 = Math.sin(x * scale * 2.3 + 1.7) * Math.cos(z * scale * 1.8 + 2.1);
@@ -53,10 +54,7 @@ const TerrainGenerator = {
     },
 
     continentalnessNoise(x, y) {
-        const key = coordKey(x, y);
-        //if (continentalnessCache.has(key)) return continentalnessCache.get(key);
         const value = this.simpleNoise(x, y, 0.005, 1);
-        //continentalnessCache.set(key, value);
         return value;
     },
 
