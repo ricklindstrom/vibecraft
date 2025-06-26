@@ -59,17 +59,17 @@ const TerrainGenerator = {
     },
 
     getTerrainHeight(x, y) {
-        const key = coordKey(x, y);
-        //if (terrainHeightCache.has(key)) return terrainHeightCache.get(key);
+        return Math.floor(this.getTerrainDetail(x,y));
+    },
+
+    getTerrainDetail(x, y) {
         const cont = this.continentalnessNoise(x, y);
         let baseHeight = this.splineMap(cont) * this.amplitude;
         let detail = 0;
         detail += this.simpleNoise(x, y, 0.02, 8 * this.amplitude);
         detail += this.simpleNoise(x, y, 0.05, 4 * this.amplitude);
         detail += this.simpleNoise(x, y, 0.1, 2 * this.amplitude);
-        const result = Math.floor(baseHeight + detail);
-        //terrainHeightCache.set(key, result);
-        return result;
+        return baseHeight + detail;
     }
 };
 

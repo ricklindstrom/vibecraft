@@ -661,7 +661,7 @@ class World {
             for (let y = 0; y <= this.CHUNK_SIZE; y++) {
                 const worldX = chunkX * this.CHUNK_SIZE + x;
                 const worldY = chunkY * this.CHUNK_SIZE + y;
-                const height = TerrainGenerator.getTerrainHeight(worldX, worldY);
+                const height = TerrainGenerator.getTerrainDetail(worldX, worldY);
                 const vertIndex = y * (this.CHUNK_SIZE + 1) + x;
                 geometry.attributes.position.setZ(vertIndex, height);
             }
