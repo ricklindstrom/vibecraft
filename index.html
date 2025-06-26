@@ -79,6 +79,7 @@
             -/+: Make Flatter/Hillier<br>
             M: Toggle Minimap<br>
             P: Toggle Player Info<br>
+            V: Toggle Surface/Block Rendering<br>
             ~: Toggle Debug panel
         </div>
     </div>
@@ -195,6 +196,9 @@
             LOW: { maxDistance: 8, treeChance: 0.2, waterDetail: 4 }
         };
 
+        // Global toggle for surface mesh rendering
+        let renderAsSurfaceMesh = false;
+
         function getLODLevel(distanceFromPlayer) {
             if (distanceFromPlayer <= LOD_LEVELS.FULL.maxDistance) return LOD_LEVELS.FULL;
             if (distanceFromPlayer <= LOD_LEVELS.MEDIUM.maxDistance) return LOD_LEVELS.MEDIUM;
@@ -255,6 +259,12 @@
                 showChunkLODMinimap = !showChunkLODMinimap;
                 const chunkLodMinimap = document.getElementById('chunk-lod-minimap');
                 chunkLodMinimap.style.display = showChunkLODMinimap ? 'block' : 'none';
+            }
+
+            // Toggle surface mesh rendering with 'v' key
+            if (event.code === 'KeyV') {
+                renderAsSurfaceMesh = !renderAsSurfaceMesh;
+                clearAndRegenerateWorld();
             }
 
             // Increase terrain amplitude with + or =
@@ -381,7 +391,7 @@
             camera.rotation.z = 0;
             
             // Update world chunks
-            world.update(player.position.x, player.position.y);
+            world.update(player.position.x, player.position.y, renderAsSurfaceMesh);
         }
         
         function onWindowResize() {
@@ -669,7 +679,7 @@ Press '~' to close`;
             world.stats.treesGenerated = 0;
             world.stats.highestPoint = -Infinity;
             world.stats.lowestPoint = Infinity;
-            world.update(player.position.x, player.position.y);
+            world.update(player.position.x, player.position.y, renderAsSurfaceMesh);
         }
     </script>
 </body>

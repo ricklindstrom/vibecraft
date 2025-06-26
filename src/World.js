@@ -456,10 +456,16 @@ class World {
      * @param {number} chunkY - Chunk Y coordinate
      * @param {number} playerX - Player X coordinate
      * @param {number} playerY - Player Y coordinate
+     * @param {boolean} renderAsSurfaceMesh - Whether to render as a surface mesh
      */
-    generateChunk(chunkX, chunkY, playerX, playerY) {
+    generateChunk(chunkX, chunkY, playerX, playerY, renderAsSurfaceMesh = false) {
         const startTime = performance.now();
         const chunkKey = `${chunkX},${chunkY}`;
+
+        // Always define these so they're available for stats
+        let blockCount = 0;
+        let waterPlanes = [];
+        let chunkTrees = [];
 
         // Calculate LOD level based on actual distance to player
         const distance = this.getChunkDistance(chunkX, chunkY, playerX, playerY);
@@ -477,47 +483,55 @@ class World {
             this.chunkLODs.delete(chunkKey);
         }
 
-        const blockSize = lodLevel.blockSize;
-        const samplingStep = blockSize; // Sample terrain at block resolution
+        let chunkGroup;
+        if (renderAsSurfaceMesh) {
+            chunkGroup = this.generateSurfaceMeshChunk(chunkX, chunkY, playerX, playerY);
+            blockCount = 0;
+            waterPlanes = [];
+            chunkTrees = [];
+        } else {
+            chunkGroup = new THREE.Group();
 
-        const chunkGroup = new THREE.Group();
+            // Calculate heights and create water planes
+            const { minHeight, maxHeight } = this.calculateChunkHeights(chunkX, chunkY, lodLevel.blockSize);
+            waterPlanes = this.createWaterPlanes(minHeight, chunkX, chunkY, lodLevel.waterDetail);
+            waterPlanes.forEach(plane => chunkGroup.add(plane));
 
-        // Calculate heights and create water planes
-        const { minHeight, maxHeight } = this.calculateChunkHeights(chunkX, chunkY, samplingStep);
-        const waterPlanes = this.createWaterPlanes(minHeight, chunkX, chunkY, lodLevel.waterDetail);
-        waterPlanes.forEach(plane => chunkGroup.add(plane));
+            // Generate terrain blocks
+            const result = this.generateTerrainBlocks(chunkX, chunkY, lodLevel.blockSize, lodLevel.blockSize);
+            blockCount = result.blockCount;
+            const blockPositions = result.blockPositions;
+            const instanceCounts = result.instanceCounts;
 
-        // Generate terrain blocks
-        const { blockCount, blockPositions, instanceCounts } = this.generateTerrainBlocks(chunkX, chunkY, blockSize, samplingStep);
-
-        // Group blocks by size for instanced meshes
-        const blocksBySize = new Map();
-        for (const [blockType, positions] of blockPositions) {
-            for (const posData of positions) {
-                const size = posData.blockSize || 1;
-                if (!blocksBySize.has(size)) {
-                    blocksBySize.set(size, new Map());
+            // Group blocks by size for instanced meshes
+            const blocksBySize = new Map();
+            for (const [blockType, positions] of blockPositions) {
+                for (const posData of positions) {
+                    const size = posData.blockSize || 1;
+                    if (!blocksBySize.has(size)) {
+                        blocksBySize.set(size, new Map());
+                    }
+                    if (!blocksBySize.get(size).has(blockType)) {
+                        blocksBySize.get(size).set(blockType, []);
+                    }
+                    blocksBySize.get(size).get(blockType).push(posData);
                 }
-                if (!blocksBySize.get(size).has(blockType)) {
-                    blocksBySize.get(size).set(blockType, []);
-                }
-                blocksBySize.get(size).get(blockType).push(posData);
             }
+
+            // Create instanced meshes for blocks
+            this.createInstancedMeshes(blocksBySize, chunkGroup, lodLevel);
+
+            // Generate houses and trees
+            const centerX = chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
+            const centerY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
+            if(Houses.isBuildable(chunkX, chunkY, centerX, centerY)) {
+                let houseBlocks = Houses.createHouse(centerX, centerY);
+                this.generateBlocks(houseBlocks, chunkGroup);
+            }
+
+            chunkTrees = this.generateTreePositionsForChunk(chunkX, chunkY, lodLevel);
+            this.generateTreesInChunk(chunkGroup, chunkX, chunkY, chunkTrees);
         }
-
-        // Create instanced meshes for blocks
-        this.createInstancedMeshes(blocksBySize, chunkGroup, lodLevel);
-
-        // Generate houses and trees
-        const centerX = chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
-        const centerY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
-        if(Houses.isBuildable(chunkX, chunkY, centerX, centerY)) {
-            let houseBlocks = Houses.createHouse(centerX, centerY);
-            this.generateBlocks(houseBlocks, chunkGroup);
-        }
-
-        const chunkTrees = this.generateTreePositionsForChunk(chunkX, chunkY, lodLevel);
-        this.generateTreesInChunk(chunkGroup, chunkX, chunkY, chunkTrees);
 
         // Add chunk to scene and update tracking
         this.chunks.set(chunkKey, chunkGroup);
@@ -527,10 +541,15 @@ class World {
         // Update statistics
         const endTime = performance.now();
         const genTime = endTime - startTime;
-        this.updateChunkStats(blockCount, waterPlanes.length, chunkTrees.length, genTime);
+        if (renderAsSurfaceMesh) {
+            // For surface mesh, skip block stats for now
+            this.updateChunkStats(0, 0, 0, genTime);
+        } else {
+            this.updateChunkStats(blockCount, waterPlanes.length, chunkTrees.length, genTime);
+        }
     }
 
-    update(playerX, playerY) {
+    update(playerX, playerY, renderAsSurfaceMesh = false) {
         const playerChunkX = Math.floor(playerX / this.CHUNK_SIZE);
         const playerChunkY = Math.floor(playerY / this.CHUNK_SIZE);
 
@@ -545,7 +564,7 @@ class World {
 
                 // If chunk exists but LOD would be different, or chunk doesn't exist
                 if (!this.chunks.has(chunkKey) || this.chunkLODs.get(chunkKey) !== newLodLevel) {
-                    this.generateChunk(x, y, playerX, playerY);
+                    this.generateChunk(x, y, playerX, playerY, renderAsSurfaceMesh);
                 }
             }
         }
@@ -623,6 +642,65 @@ class World {
         }
 
         return instancedMeshes;
+    }
+
+    /**
+     * Generates a surface mesh (heightmap) for a chunk
+     * @param {number} chunkX - Chunk X coordinate
+     * @param {number} chunkY - Chunk Y coordinate
+     * @param {number} playerX - Player X coordinate
+     * @param {number} playerY - Player Y coordinate
+     * @returns {THREE.Group} Group containing the surface mesh and water planes
+     */
+    generateSurfaceMeshChunk(chunkX, chunkY, playerX, playerY) {
+        const group = new THREE.Group();
+        const resolution = this.CHUNK_SIZE + 1; // One more vertex than blocks for seamless edges
+        const geometry = new THREE.PlaneGeometry(this.CHUNK_SIZE, this.CHUNK_SIZE, this.CHUNK_SIZE, this.CHUNK_SIZE);
+        // Set vertex heights
+        for (let x = 0; x <= this.CHUNK_SIZE; x++) {
+            for (let y = 0; y <= this.CHUNK_SIZE; y++) {
+                const worldX = chunkX * this.CHUNK_SIZE + x;
+                const worldY = chunkY * this.CHUNK_SIZE + y;
+                const height = TerrainGenerator.getTerrainHeight(worldX, worldY);
+                const vertIndex = y * (this.CHUNK_SIZE + 1) + x;
+                geometry.attributes.position.setZ(vertIndex, height);
+            }
+        }
+        geometry.computeVertexNormals();
+        const material = new THREE.MeshLambertMaterial({ color: 0x4CAF50, side: THREE.DoubleSide });
+        const mesh = new THREE.Mesh(geometry, material);
+        // Orient and position mesh to match chunk
+        mesh.rotation.x = -Math.PI / 2;
+        mesh.position.set(
+            chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2,
+            0,
+            chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2
+        );
+        group.add(mesh);
+        // Add water planes if needed
+        let minHeight = Infinity;
+        for (let x = 0; x <= this.CHUNK_SIZE; x++) {
+            for (let y = 0; y <= this.CHUNK_SIZE; y++) {
+                const worldX = chunkX * this.CHUNK_SIZE + x;
+                const worldY = chunkY * this.CHUNK_SIZE + y;
+                const height = TerrainGenerator.getTerrainHeight(worldX, worldY);
+                minHeight = Math.min(minHeight, height);
+            }
+        }
+        if (minHeight < 0) {
+            const waterPlane = new THREE.Mesh(
+                this.waterGeometry,
+                this.waterSurfaceMaterial
+            );
+            waterPlane.position.set(
+                chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2,
+                0,
+                chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2
+            );
+            waterPlane.rotation.x = -Math.PI / 2;
+            group.add(waterPlane);
+        }
+        return group;
     }
 }
 
