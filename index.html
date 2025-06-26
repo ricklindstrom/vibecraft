@@ -324,12 +324,8 @@
             }
             
             // Handle strafing (A/D keys)
-            if (keys['KeyA']) {
-                player.velocity.x = -1;  // Left strafe stays the same
-            }
-            if (keys['KeyD']) {
-                player.velocity.x = 1;   // Right strafe stays the same
-            }
+            if (keys['KeyA']) { player.velocity.x = -1; }
+            if (keys['KeyD']) { player.velocity.x = 1; }
             
             // Arrow keys only affect Y rotation (left/right looking)
             if (keys['ArrowLeft']) {

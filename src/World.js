@@ -6,7 +6,8 @@ const BLOCK_TYPES = {
     SAND: 3,
     WOOD: 4,
     LEAVES: 5,
-    GLASS: 6
+    GLASS: 6,
+    AIR: 7 // Empty space, not rendered
 };
 
 // Structure generation result format
@@ -578,6 +579,7 @@ class World {
 
         // Count blocks by type and collect positions
         for (const block of blocks) {
+            if (block.type === BLOCK_TYPES.AIR) continue; // Skip AIR blocks (empty space)
             if (!blockCounts.has(block.type)) {
                 blockCounts.set(block.type, 0);
                 blockPositions.set(block.type, []);
