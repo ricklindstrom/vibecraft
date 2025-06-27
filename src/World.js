@@ -520,18 +520,17 @@ class World {
 
             // Create instanced meshes for blocks
             this.createInstancedMeshes(blocksBySize, chunkGroup, lodLevel);
-
-            // Generate houses and trees
-            const centerX = chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
-            const centerY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
-            if(Houses.isBuildable(chunkX, chunkY, centerX, centerY)) {
-                let houseBlocks = Houses.createHouse(centerX, centerY);
-                this.generateBlocks(houseBlocks, chunkGroup);
-            }
-
-            chunkTrees = this.generateTreePositionsForChunk(chunkX, chunkY, lodLevel);
-            this.generateTreesInChunk(chunkGroup, chunkX, chunkY, chunkTrees);
         }
+
+        // Generate houses and trees in both modes
+        const centerX = chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
+        const centerY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
+        if(Houses.isBuildable(chunkX, chunkY, centerX, centerY)) {
+            let houseBlocks = Houses.createHouse(centerX, centerY);
+            this.generateBlocks(houseBlocks, chunkGroup);
+        }
+        chunkTrees = this.generateTreePositionsForChunk(chunkX, chunkY, lodLevel);
+        this.generateTreesInChunk(chunkGroup, chunkX, chunkY, chunkTrees);
 
         // Add chunk to scene and update tracking
         this.chunks.set(chunkKey, chunkGroup);
@@ -669,6 +668,7 @@ class World {
         geometry.computeVertexNormals();
         const material = new THREE.MeshLambertMaterial({ color: 0x4CAF50, side: THREE.DoubleSide });
         const mesh = new THREE.Mesh(geometry, material);
+        mesh.receiveShadow = true; // Allow surface mesh to receive shadows from trees/structures
         // Orient and position mesh to match chunk
         mesh.rotation.x = -Math.PI / 2;
         mesh.position.set(

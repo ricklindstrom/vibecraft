@@ -7,12 +7,12 @@ const Structures = {
     },
 
     STYLES : {
-        MARBLE:     { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.MARBLE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.MARBLE, pillar: BLOCK_TYPES.MARBLE, roofType: 'PYRAMID' },
-        WOOD:       { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD,   pillar: BLOCK_TYPES.WOOD,   roofType: 'PYRAMID' },
-        STONE:      { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE,  pillar: BLOCK_TYPES.STONE,  roofType: 'PYRAMID' },
+        MARBLE:     { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.MARBLE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR, pillar: BLOCK_TYPES.MARBLE, roofType: 'PYRAMID' },
+        WOOD:       { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,   pillar: BLOCK_TYPES.WOOD,   roofType: 'PYRAMID' },
+        STONE:      { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.STONE,  roofType: 'PYRAMID' },
         WOOD_STONE: { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD,   pillar: BLOCK_TYPES.WOOD,   roofType: 'PYRAMID' },
         STONE_WOOD: { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE,  pillar: BLOCK_TYPES.STONE,  roofType: 'PYRAMID' },
-        STONE_GLASS: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE,  pillar: BLOCK_TYPES.STONE,  roofType: 'FLAT' },
+        STONE_GLASS: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.STONE,  roofType: 'FLAT' },
         MARBLE2:    { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.GLASS, window: BLOCK_TYPES.GRASS, door: BLOCK_TYPES.MARBLE, pillar: BLOCK_TYPES.MARBLE, roofType: 'FLAT' },
         WOOD2:      { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.GLASS,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD,   pillar: BLOCK_TYPES.WOOD,   roofType: 'PYRAMID' },
         WOOD3:      { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.WOOD,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD,   pillar: BLOCK_TYPES.WOOD,   roofType: 'PYRAMID' },
@@ -143,9 +143,9 @@ const Structures = {
                 } if(!isGap) {
                     blocks.push({ x, y, z, type: style.wall });
                 } else if(hasWindow) {
-                    blocks.push({ x, y, z, type: BLOCK_TYPES.GLASS });
+                    blocks.push({ x, y, z, type: style.window });
                 } else if(hasDoor) {
-                    // No Op
+                    blocks.push({ x, y, z, type: style.door });
                 }
             }
         }
@@ -167,9 +167,9 @@ const Structures = {
                 } else if(!isGap) {
                     blocks.push({ x, y, z, type:style.wall });
                 } else if(hasWindow) {
-                    blocks.push({ x, y, z, type: BLOCK_TYPES.GLASS });
+                    blocks.push({ x, y, z, type: style.window });
                 } else if(hasDoor) {
-                    // No Op
+                    blocks.push({ x, y, z, type: style.door });
                 }
             }
         }

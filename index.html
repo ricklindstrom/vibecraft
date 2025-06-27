@@ -370,9 +370,9 @@
             // Ground collision
             const overrideHeight = Structures.getTerrainOverrideForZ( Math.floor(player.position.x), Math.floor(player.position.y), player.position.z );
    
-            const surfaceHeight = overrideHeight || TerrainGenerator.getTerrainHeight(
-                Math.floor(player.position.x),
-                Math.floor(player.position.y)
+            const surfaceHeight = overrideHeight || TerrainGenerator.getTerrainDetail(
+                player.position.x,
+                player.position.y
             );
             
             if (Physics.checkCollision(player.position, surfaceHeight)) {
