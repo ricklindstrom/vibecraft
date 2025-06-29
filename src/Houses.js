@@ -24,20 +24,24 @@ const Houses = {
         const diff = highest - lowest;
         if(diff > 7 || lowest < 0) return false;
 
-        return this.random(chunkX, chunkY) > 0.5 && this.random(chunkY, chunkX) > 0.5
+        return this.random(chunkX, chunkY) > 0.5 && this.random(chunkY, chunkX) > 0.5;
     },
 
-    //Hash-based stable random number between 0 and 1 (NOT VERY GOOD?)
+    //Hash-based stable random number between 0 and 1
     random(x, y) {
         return Math.abs(Math.floor(x * 19349663 + y * 73856093)) % 100000 / 100000;
     },
 
     getRandomStyle(x, y) {
+        console.log(x, y);
         const styleKeys = Object.keys(Structures.STYLES);
-        const crazynum = Math.abs((x & 0xFFFF) * 73856093 + (y & 0xFFFF) * 19349663);
-        const hash = (crazynum & 0xFFFFFFFF) % styleKeys.length;
+        console.log("styleKeys=" + styleKeys);
+        console.log("styleKeys.length=" + styleKeys.length);
+        //const hash = Math.abs(Math.floor(((x * 73856093) ^ (y * 19349663)) % 4294967296)) % styleKeys.length;
+        const hash = Math.abs(((x * 73856093) ^ (y * 19349663))) % styleKeys.length;
+        console.log("hash=" + hash);
         return Structures.STYLES[styleKeys[hash]];
-    },
+    }, 
 
     /**
      * Create a house structure at the given center position, with optional size and style.
@@ -46,17 +50,17 @@ const Houses = {
      * @param {number} centerY
      * @param {number} size
      * @param {object} style - One of Structures.STYLES
-     * @returns {Structure}
+     * @returns {Array} Array of blocks
      */
     createHouse(centerX, centerY, size = 10, style = undefined) {
-        const blocks = [];
-
+        // Deterministic style selection if not provided
         if (!style) {
             style = this.getRandomStyle(centerX, centerY);
             if(!style) {
-                return blocks;
+                return [];
             }
         }
+        const blocks = [];
 
         const sizeX = Math.floor(size * 1 * (1 + this.random(centerX + 10, centerY + 20)));
         const sizeY = Math.floor(size * 1 * (1 + this.random(centerX + 100, centerY - 20)));
@@ -97,7 +101,6 @@ const Houses = {
         } else if(style.roofType === 'STORY') {
             blocks.push(...Structures.createHouse(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style.roof));
         }
-
         return blocks;
     },
 

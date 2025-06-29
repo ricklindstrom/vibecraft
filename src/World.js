@@ -522,13 +522,14 @@ class World {
             this.createInstancedMeshes(blocksBySize, chunkGroup, lodLevel);
         }
 
-        // Generate houses and trees in both modes
+        // Generate houses and trees
         const centerX = chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
         const centerY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
         if(Houses.isBuildable(chunkX, chunkY, centerX, centerY)) {
             let houseBlocks = Houses.createHouse(centerX, centerY);
             this.generateBlocks(houseBlocks, chunkGroup);
         }
+
         chunkTrees = this.generateTreePositionsForChunk(chunkX, chunkY, lodLevel);
         this.generateTreesInChunk(chunkGroup, chunkX, chunkY, chunkTrees);
 

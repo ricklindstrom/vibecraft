@@ -176,6 +176,25 @@ const Structures = {
         return blocks;
     },
 
+    // Splits a box into two boxes
+    // either horizontally or vertically, depending on which is larger.
+    splitBox(x1, y1, x2, y2, foundation, height) {
+
+        if((x2 - x1) > (y2 - y1)) {
+            const xMid = Math.floor((x1 + x2) / 2);
+            const box1 = [ x1, y1, xMid, y2, foundation, height ];
+            const box2 = [ xMid, y1, x2, y2, foundation, height ];
+            return [box1, box2];
+        } else {
+            const yMid = Math.floor((y1 + y2) / 2);
+            const box1 = [ x1, y1, x2, yMid, foundation, height ];
+            const box2 = [ x1, yMid, x2, y2, foundation, height ];
+            return [box1, box2];
+        }
+
+    },
+
+
     // Actually creates a Hip roof. See https://primeroofingfl.com/blog/gable-roofs-info/ 
     createPyramidRoof(x1, y1, x2, y2, z, type = BLOCK_TYPES.WOOD) {
         const blocks = [];
