@@ -3,13 +3,14 @@ const Structures = {
 
     ROOF_TYPES: {
         PYRAMID: 'PYRAMID',
-        FLAT: 'FLAT'
+        FLAT: 'FLAT',
+        GABLE: 'GABLE'
     },
 
     STYLES : {
         MARBLE:     { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.MARBLE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR, pillar: BLOCK_TYPES.MARBLE, roofType: 'PYRAMID' },
-        WOOD:       { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,   pillar: BLOCK_TYPES.WOOD,   roofType: 'PYRAMID' },
-        STONE:      { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.STONE,  roofType: 'PYRAMID' },
+        WOOD:       { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,   pillar: BLOCK_TYPES.WOOD,   roofType: 'GABLE' },
+        STONE:      { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.STONE,  roofType: 'GABLE' },
         WOOD_STONE: { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD,   pillar: BLOCK_TYPES.WOOD,   roofType: 'PYRAMID' },
         STONE_WOOD: { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE,  pillar: BLOCK_TYPES.STONE,  roofType: 'PYRAMID' },
         STONE_GLASS: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.STONE,  roofType: 'FLAT' },
@@ -17,6 +18,7 @@ const Structures = {
         WOOD2:      { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.GLASS,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD,   pillar: BLOCK_TYPES.WOOD,   roofType: 'PYRAMID' },
         WOOD3:      { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.WOOD,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD,   pillar: BLOCK_TYPES.WOOD,   roofType: 'PYRAMID' },
         GAZEBO:      { trim: BLOCK_TYPES.STONE,   wall: BLOCK_TYPES.AIR,  roof: BLOCK_TYPES.WOOD,  window: BLOCK_TYPES.AIR, door: BLOCK_TYPES.AIR,   pillar: BLOCK_TYPES.WOOD,   roofType: 'FLAT' },
+        GABLE_WOOD: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.WOOD, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD, roofType: 'GABLE' },
         //WOOD_LEAVES: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.LEAVES, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD },
         //LEAVES_WOOD: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.WOOD, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD },
         //LEAVES_STONE: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE },
@@ -230,6 +232,30 @@ const Structures = {
         for (let x = Math.min(x1, x2) - 1; x <= Math.max(x1, x2) + 1; x++) {
             for (let y = Math.min(y1, y2) - 1; y <= Math.max(y1, y2) + 1; y++) {
                 blocks.push({ x, y, z, type });
+            }
+        }
+        return blocks;
+    },
+
+    // Creates a gable roof (two sloped sides meeting at a ridge)
+    // The ridge (highest point) is in the middle, sloping down to both sides.
+    createGableRoof(x1, y1, x2, y2, z, type = BLOCK_TYPES.WOOD) {
+        const blocks = [];
+        const startX = Math.min(x1, x2);
+        const stopX = Math.max(x1, x2);
+        const startY = Math.min(y1, y2);
+        const stopY = Math.max(y1, y2);
+        const width = stopX - startX;
+        const height = Math.ceil(width / 2); // Height of the gable
+        const ridgeY1 = startY;
+        const ridgeY2 = stopY;
+        // For each x, build up from the sides to the ridge in the middle
+        for (let x = 0; x <= width; x++) {
+            // Distance from the nearest side
+            const distToEdge = Math.min(x, width - x);
+            const roofZ = z + distToEdge; // Sides are lowest, middle is highest
+            for (let y = ridgeY1; y <= ridgeY2; y++) {
+                blocks.push({ x: startX + x, y, z: roofZ, type });
             }
         }
         return blocks;

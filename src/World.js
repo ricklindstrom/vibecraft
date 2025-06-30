@@ -669,7 +669,7 @@ class World {
         geometry.computeVertexNormals();
         const material = new THREE.MeshLambertMaterial({ color: 0x4CAF50, side: THREE.DoubleSide });
         const mesh = new THREE.Mesh(geometry, material);
-        mesh.receiveShadow = true; // Allow surface mesh to receive shadows from trees/structures
+        mesh.receiveShadow = true;
         // Orient and position mesh to match chunk
         mesh.rotation.x = -Math.PI / 2;
         mesh.position.set(

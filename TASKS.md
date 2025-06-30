@@ -1,32 +1,32 @@
 ## TASKS
- - [x] DOC: Publish to a github 'page'. https://ricklindstrom.github.io/vibecraft/
- - [x] DOC: Make a link on the readme linking to the playable page. https://ricklindstrom.github.io/vibecraft/
- - [x] PLAYER: Allow jumping even if not on the ground to allow 'flying'.
- - [x] DOC: Add screenshot to README
- - [x] DOC: Make a link on the html page linking to the github page https://github.com/ricklindstrom/vibecraft 
- - [x] POLISH: Make two types of water layers. Make water surface shiny. Properly aligm subsurface water layers.
- - [x] POLISH: Fix shadows
- - [x] LOD: Implement level of detail (LOD)
- - [x] STRUCTURES: Add generic structure support
- - [x] STRUCTURES: Add houses.
- - [x] DEBUG: Fix FPS display in debug panel.
- - [x] PERF: Optimize speed of minimap (It cuts FPS in half)
- - [x] CHUNKS: Create a minimap showing chunk debug info
- - [x] LOD: Use larger block sizes for distant chunks
- - [x] STRUCTURES: Relocate tree creation out of world class
- - [x] TERRAIN + PERF: Only create subsurface blocks if the terrain is sufficently sloped
- - [x] TERRAIN CALC + STRUCTURES: Add support for terrain overrides to support player collision for strutures.
- - [x] STRUCTURES: Make houses with different styles
- - [x] STRUCTURES + TERRAIN: Support multple levels of terrain overrides to support multi-story buildings
- - [x] STRUCTURES: Don't add trees where structures are located.
- - [x] STRUCTURES: Add an AIR block type that can be used in structures but is ignored during render.
- - [x] TERRAIN DISP: Allow swiching between displaying surfaces and blocks
+ - [X] DOC: Publish to a github 'page'. https://ricklindstrom.github.io/vibecraft/
+ - [X] DOC: Make a link on the readme linking to the playable page. https://ricklindstrom.github.io/vibecraft/
+ - [X] PLAYER: Allow jumping even if not on the ground to allow 'flying'.
+ - [X] DOC: Add screenshot to README
+ - [X] DOC: Make a link on the html page linking to the github page https://github.com/ricklindstrom/vibecraft 
+ - [X] POLISH: Make two types of water layers. Make water surface shiny. Properly aligm subsurface water layers.
+ - [X] POLISH: Fix shadows
+ - [X] LOD: Implement level of detail (LOD)
+ - [X] STRUCTURES: Add generic structure support
+ - [X] STRUCTURES: Add houses.
+ - [X] DEBUG: Fix FPS display in debug panel.
+ - [X] PERF: Optimize speed of minimap (It cuts FPS in half)
+ - [X] CHUNKS: Create a minimap showing chunk debug info
+ - [X] LOD: Use larger block sizes for distant chunks
+ - [X] STRUCTURES: Relocate tree creation out of world class
+ - [X] TERRAIN + PERF: Only create subsurface blocks if the terrain is sufficently sloped
+ - [X] TERRAIN CALC + STRUCTURES: Add support for terrain overrides to support player collision for strutures.
+ - [X] STRUCTURES: Make houses with different styles
+ - [X] STRUCTURES + TERRAIN: Support multple levels of terrain overrides to support multi-story buildings
+ - [X] STRUCTURES: Don't add trees where structures are located.
+ - [X] STRUCTURES: Add an AIR block type that can be used in structures but is ignored during render. Add sample 'gazebo' with air walls.
+ - [X] TERRAIN DISP: Allow swiching between displaying surfaces and blocks
  - [ ] CHUNKS: Use frustum to determine which chunks to load
  - [ ] STRUCTURES: Add new roof types
-     - [ ] Add GABLE roof
-     - [ ] Add Rhenish helm roof 
-     - [ ] Add Cross roof
-     - [ ] Add Sail vault or cross vault
+   - [ ] Add GABLE roof
+   - [ ] Add Rhenish helm roof 
+   - [ ] Add Cross roof
+   - [ ] Add Sail vault or cross vault
  - [ ] LOD: Don't evict chunks for dropping one LOD level
  - [ ] POLISH: Add detail to blocks.
  - [ ] TERRAIN CALC: Add proper smoothing to spline function.

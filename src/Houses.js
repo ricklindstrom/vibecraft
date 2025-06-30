@@ -100,6 +100,9 @@ const Houses = {
             blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style.roof));
         } else if(style.roofType === 'STORY') {
             blocks.push(...Structures.createHouse(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style.roof));
+        } else if(style.roofType === 'GABLE') {
+            // Add support for GABLE roof
+            blocks.push(...Structures.createGableRoof(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style.roof));
         }
         return blocks;
     },
