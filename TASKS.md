@@ -22,8 +22,8 @@
  - [X] STRUCTURES: Add an AIR block type that can be used in structures but is ignored during render. Add sample 'gazebo' with air walls.
  - [X] TERRAIN DISP: Allow swiching between displaying surfaces and blocks
  - [ ] CHUNKS: Use frustum to determine which chunks to load
- - [ ] STRUCTURES: Add new roof types
-   - [ ] Add GABLE roof
+ - [.] STRUCTURES: Add new roof types
+   - [X] Add GABLE roof
    - [ ] Add Rhenish helm roof 
    - [ ] Add Cross roof
    - [ ] Add Sail vault or cross vault

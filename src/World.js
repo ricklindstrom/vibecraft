@@ -7,7 +7,9 @@ const BLOCK_TYPES = {
     WOOD: 4,
     LEAVES: 5,
     GLASS: 6,
-    AIR: 7 // Empty space, not rendered
+    AIR: 7, // Empty space, not rendered
+    WHITE: 8,
+    BLACK: 9
 };
 
 // Structure generation result format
@@ -138,7 +140,9 @@ class World {
                 color: 0x228B22,
                 transparent: true,
                 opacity: 0.9
-            })
+            }),
+            [BLOCK_TYPES.WHITE]: new THREE.MeshLambertMaterial({ color: 0xffffff }),
+            [BLOCK_TYPES.BLACK]: new THREE.MeshLambertMaterial({ color: 0x000000 })
         };
     }
 

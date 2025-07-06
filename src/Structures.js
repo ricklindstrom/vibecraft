@@ -8,17 +8,19 @@ const Structures = {
     },
 
     STYLES : {
-        MARBLE:     { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.MARBLE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR, pillar: BLOCK_TYPES.MARBLE, roofType: 'PYRAMID' },
-        WOOD:       { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,   pillar: BLOCK_TYPES.WOOD,   roofType: 'GABLE' },
-        STONE:      { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.STONE,  roofType: 'GABLE' },
-        WOOD_STONE: { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD,   pillar: BLOCK_TYPES.WOOD,   roofType: 'PYRAMID' },
-        STONE_WOOD: { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE,  pillar: BLOCK_TYPES.STONE,  roofType: 'PYRAMID' },
-        STONE_GLASS: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.STONE,  roofType: 'FLAT' },
-        MARBLE2:    { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.GLASS, window: BLOCK_TYPES.GRASS, door: BLOCK_TYPES.MARBLE, pillar: BLOCK_TYPES.MARBLE, roofType: 'FLAT' },
-        WOOD2:      { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.GLASS,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD,   pillar: BLOCK_TYPES.WOOD,   roofType: 'PYRAMID' },
-        WOOD3:      { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.WOOD,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD,   pillar: BLOCK_TYPES.WOOD,   roofType: 'PYRAMID' },
-        GAZEBO:      { trim: BLOCK_TYPES.STONE,   wall: BLOCK_TYPES.AIR,  roof: BLOCK_TYPES.WOOD,  window: BLOCK_TYPES.AIR, door: BLOCK_TYPES.AIR,   pillar: BLOCK_TYPES.WOOD,   roofType: 'FLAT' },
-        GABLE_WOOD: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.WOOD, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD, roofType: 'GABLE' },
+        WHITE:     { trim: BLOCK_TYPES.BLACK,  wall: BLOCK_TYPES.WHITE, roof: BLOCK_TYPES.WHITE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.BLACK, floor: BLOCK_TYPES.STONE, roofType: 'GABLE' },
+
+        MARBLE:     { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.MARBLE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.MARBLE, floor: BLOCK_TYPES.STONE, roofType: 'PYRAMID' },
+        WOOD:       { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.WOOD,   floor: BLOCK_TYPES.STONE, roofType: 'GABLE' },
+        STONE:      { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.STONE,  floor: BLOCK_TYPES.STONE, roofType: 'GABLE' },
+        WOOD_STONE: { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD,  pillar: BLOCK_TYPES.WOOD,  floor: BLOCK_TYPES.STONE, roofType: 'PYRAMID' },
+        STONE_WOOD: { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE, floor: BLOCK_TYPES.STONE, roofType: 'PYRAMID' },
+        STONE_GLASS: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.STONE,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.STONE,  floor: BLOCK_TYPES.STONE, roofType: 'FLAT' },
+        MARBLE2:    { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.GLASS,  window: BLOCK_TYPES.GRASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.MARBLE, floor: BLOCK_TYPES.STONE, roofType: 'FLAT' },
+        WOOD2:      { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.GLASS,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.WOOD,   floor: BLOCK_TYPES.STONE, roofType: 'PYRAMID' },
+        WOOD3:      { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.WOOD,   floor: BLOCK_TYPES.STONE, roofType: 'PYRAMID' },
+        GAZEBO:      { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.AIR,   roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.AIR,   door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.WOOD,   floor: BLOCK_TYPES.STONE, roofType: 'FLAT' },
+        GABLE_WOOD: { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD,   floor: BLOCK_TYPES.STONE, roofType: 'GABLE' },
         //WOOD_LEAVES: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.LEAVES, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD },
         //LEAVES_WOOD: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.WOOD, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD },
         //LEAVES_STONE: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE },
@@ -119,11 +121,11 @@ const Structures = {
         return blocks;
     },
 
-    createFloor(x1, y1, x2, y2, z, type = BLOCK_TYPES.SAND) {
+    createFloor(x1, y1, x2, y2, z, style = STYLES.STONE) {
         const blocks = [];
         for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
             for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
-                blocks.push({ x, y, z, type });
+                blocks.push({ x, y, z, type: style.floor });
             }
         }
         this.addTerrainOverride(x1, y1, x2, y2, z);
@@ -198,7 +200,7 @@ const Structures = {
 
 
     // Actually creates a Hip roof. See https://primeroofingfl.com/blog/gable-roofs-info/ 
-    createPyramidRoof(x1, y1, x2, y2, z, type = BLOCK_TYPES.WOOD) {
+    createPyramidRoof(x1, y1, x2, y2, z, style = STYLES.WOOD) {
         const blocks = [];
 
         const startY = Math.min(y1, y2);
@@ -216,30 +218,30 @@ const Structures = {
 
             // Create the edges of the roof for this layer
             for (let x = startX + xOffset; x <= stopX - xOffset; x++) {
-                blocks.push({ x, y: startY + yOffset, z: layerZ, type });
-                blocks.push({ x, y: stopY - yOffset, z: layerZ, type });
+                blocks.push({ x, y: startY + yOffset, z: layerZ, type: style.roof });
+                blocks.push({ x, y: stopY - yOffset, z: layerZ, type: style.roof });
             }
             for (let y = startY + yOffset; y <= stopY - yOffset; y++) {
-                blocks.push({ x: startX + xOffset, y, z: layerZ, type });
-                blocks.push({ x: stopX - xOffset, y, z: layerZ, type });
+                blocks.push({ x: startX + xOffset, y, z: layerZ, type: style.roof });
+                blocks.push({ x: stopX - xOffset, y, z: layerZ, type: style.roof });
             }
         }
         return blocks;
     },
 
-    createRoof(x1, y1, x2, y2, z, type = BLOCK_TYPES.WOOD) {
+    createRoof(x1, y1, x2, y2, z, style = STYLES.WOOD) {
         const blocks = [];
         for (let x = Math.min(x1, x2) - 1; x <= Math.max(x1, x2) + 1; x++) {
             for (let y = Math.min(y1, y2) - 1; y <= Math.max(y1, y2) + 1; y++) {
-                blocks.push({ x, y, z, type });
+                blocks.push({ x, y, z, type: style.roof });
             }
         }
         return blocks;
     },
 
     // Creates a gable roof (two sloped sides meeting at a ridge)
-    // The ridge (highest point) is in the middle, sloping down to both sides.
-    createGableRoof(x1, y1, x2, y2, z, type = BLOCK_TYPES.WOOD) {
+    // TODO: Add 'gable end triangles' because it is currently open at the ends.
+    createGableRoof(x1, y1, x2, y2, z, style = STYLES.WOOD) {
         const blocks = [];
         const startX = Math.min(x1, x2);
         const stopX = Math.max(x1, x2);
@@ -249,13 +251,22 @@ const Structures = {
         const height = Math.ceil(width / 2); // Height of the gable
         const ridgeY1 = startY;
         const ridgeY2 = stopY;
-        // For each x, build up from the sides to the ridge in the middle
+        //For each x, build up from the sides to the ridge in the middle
         for (let x = 0; x <= width; x++) {
             // Distance from the nearest side
             const distToEdge = Math.min(x, width - x);
             const roofZ = z + distToEdge; // Sides are lowest, middle is highest
             for (let y = ridgeY1; y <= ridgeY2; y++) {
-                blocks.push({ x: startX + x, y, z: roofZ, type });
+                blocks.push({ x: startX + x, y, z: roofZ, type: style.roof });
+            }
+        }
+        // Fill in gable end triangles at startY and stopY using trim
+        for (let x = 0; x <= width; x++) {
+            const distToEdge = Math.min(x, width - x);
+            // Fill from base up to ridge at both ends
+            for (let dz = 0; dz <= distToEdge; dz++) {
+                blocks.push({ x: startX + x, y: startY, z: z + dz, type: style.trim });
+                blocks.push({ x: startX + x, y: stopY, z: z + dz, type: style.trim });
             }
         }
         return blocks;

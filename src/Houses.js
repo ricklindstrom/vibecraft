@@ -33,15 +33,13 @@ const Houses = {
     },
 
     getRandomStyle(x, y) {
-        console.log(x, y);
         const styleKeys = Object.keys(Structures.STYLES);
-        console.log("styleKeys=" + styleKeys);
-        console.log("styleKeys.length=" + styleKeys.length);
         //const hash = Math.abs(Math.floor(((x * 73856093) ^ (y * 19349663)) % 4294967296)) % styleKeys.length;
         const hash = Math.abs(((x * 73856093) ^ (y * 19349663))) % styleKeys.length;
-        console.log("hash=" + hash);
         return Structures.STYLES[styleKeys[hash]];
     }, 
+
+    
 
     /**
      * Create a house structure at the given center position, with optional size and style.
@@ -85,7 +83,7 @@ const Houses = {
         blocks.push(...Structures.createPillar(x2, y2, h22, foundationZ, style.pillar));
 
         //create floor
-        blocks.push(...Structures.createFloor(x1, y1 - porch, x2, y2, foundationZ, style.floor));
+        blocks.push(...Structures.createFloor(x1, y1 - porch, x2, y2, foundationZ, style));
         
         //create walls  
         blocks.push(...Structures.createXWall(x1, x2, y1, foundationZ, false, true, style));
@@ -95,14 +93,14 @@ const Houses = {
 
         //create roof
         if(style.roofType === 'PYRAMID') {
-            blocks.push(...Structures.createPyramidRoof(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style.roof));
+            blocks.push(...Structures.createPyramidRoof(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style));
         } else if(style.roofType === 'FLAT') {
-            blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style.roof));
+            blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style));
         } else if(style.roofType === 'STORY') {
-            blocks.push(...Structures.createHouse(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style.roof));
+            blocks.push(...Structures.createHouse(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style));
         } else if(style.roofType === 'GABLE') {
             // Add support for GABLE roof
-            blocks.push(...Structures.createGableRoof(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style.roof));
+            blocks.push(...Structures.createGableRoof(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style));
         }
         return blocks;
     },
