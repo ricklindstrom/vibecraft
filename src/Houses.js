@@ -97,7 +97,8 @@ const Houses = {
         } else if(style.roofType === 'FLAT') {
             blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style));
         } else if(style.roofType === 'STORY') {
-            blocks.push(...Structures.createHouse(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style));
+            // THIS ISN'T RIGHT YET
+            //blocks.push(...Structures.createHouse(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style));
         } else if(style.roofType === 'GABLE') {
             // Add support for GABLE roof
             blocks.push(...Structures.createGableRoof(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style));

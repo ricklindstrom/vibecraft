@@ -529,8 +529,8 @@ class World {
         // Generate houses and trees
         const centerX = chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
         const centerY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
-        if(Houses.isBuildable(chunkX, chunkY, centerX, centerY)) {
-            let houseBlocks = Houses.createHouse(centerX, centerY);
+        if(FiveByFive.isBuildable(chunkX, chunkY, centerX, centerY)) {
+            let houseBlocks = FiveByFive.createHouse(centerX, centerY);
             this.generateBlocks(houseBlocks, chunkGroup);
         }
 
