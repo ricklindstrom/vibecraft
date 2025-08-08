@@ -40,7 +40,50 @@ const FiveByFive = {
         return Structures.STYLES[styleKeys[hash]];
     }, 
 
-    
+
+    createBuilding(xinit, yinit, xsize = 3, ysize = 3, floors = 3, style = undefined) {
+        const blocks = [];
+
+        if (!style) {
+            style = this.getRandomStyle(xinit, yinit);
+            if(!style) {
+                return [];
+            }
+        }
+        let cellSize = 4;
+
+        const h11 = TerrainGenerator.getTerrainHeight(xinit, yinit);
+        const h12 = TerrainGenerator.getTerrainHeight(xinit, yinit + ysize * cellSize - 1);
+        const h21 = TerrainGenerator.getTerrainHeight(xinit + xsize * cellSize - 1, yinit);
+        const h22 = TerrainGenerator.getTerrainHeight(xinit + xsize * cellSize - 1, yinit + ysize * cellSize - 1);
+        let foundationZ = Math.max(h11,h12,h21,h22) + 1;
+        
+
+        for(let f = 0; f < floors; f++) {
+            for(let x = 0; x < xsize; x++) {    
+                for(let y = 0; y < ysize; y++) {
+                    if(x==0 && y==0) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "dw  ", cellSize, style));
+                    } else if(x == 0) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), " w  ", cellSize, style));
+                    } else if(y == 0) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "w   ", cellSize, style));
+                    } 
+                    
+                    if(x==xsize-1 && y==ysize-1) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "  ww", cellSize, style));
+                    } else if(x == xsize-1) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "   w", cellSize, style));
+                    } else if(y == ysize-1) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "  w ", cellSize, style));
+                    }   
+
+                }
+            }
+        }
+
+        return blocks;
+    },
 
     /**
      * Create a house structure at the given center position, with optional size and style.
@@ -51,7 +94,7 @@ const FiveByFive = {
      * @param {object} style - One of Structures.STYLES
      * @returns {Array} Array of blocks
      */
-    createHouse(xinit, yinit, code = "dwww", size = 10, style = undefined) {
+    createHouse(xinit, yinit, code = "dwww", size = 4, style = undefined) {
         // Deterministic style selection if not provided
         if (!style) {
             style = this.getRandomStyle(xinit, yinit);
@@ -62,9 +105,9 @@ const FiveByFive = {
         const blocks = [];
 
         const x1 = xinit;
-        const x2 = xinit + 4;
+        const x2 = xinit + size - 1;
         const y1 = yinit;
-        const y2 = yinit + 4;
+        const y2 = yinit + size - 1;
 
         const h11 = TerrainGenerator.getTerrainHeight(x1, y1);
         const h12 = TerrainGenerator.getTerrainHeight(x1, y2);
@@ -80,13 +123,13 @@ const FiveByFive = {
         blocks.push(...Structures.createPillar(x2, y2, h22, foundationZ, style.pillar));
 
         // //create roof
-         blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + 4, style));
+         blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + size - 1, style));
 
         //Grid
-         blocks.push(...Structures.createPillar(x1, y1, foundationZ, foundationZ + 4, style.pillar));
-         blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + 4, style.pillar));
-         blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + 4, style.pillar));
-         blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + 4, style.pillar));
+         blocks.push(...Structures.createPillar(x1, y1, foundationZ, foundationZ + size - 1, style.pillar));
+         blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + size - 1, style.pillar));
+         blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + size - 1, style.pillar));
+         blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + size - 1, style.pillar));
 
         //Walls
 
@@ -109,9 +152,10 @@ const FiveByFive = {
         return blocks;
     },
 
-    createCell(xinit, yinit, code = "wwww", size = 10, style = undefined) {
-        // Deterministic style selection if not provided
+    createCell(xinit, yinit, foundationZ = undefined, code = "wwww", size = 4, style = undefined) {
+
         if (!style) {
+            // Deterministic style selection if not provided
             style = this.getRandomStyle(xinit, yinit);
             if(!style) {
                 return [];
@@ -120,16 +164,18 @@ const FiveByFive = {
         const blocks = [];
 
         const x1 = xinit;
-        const x2 = xinit + 4;
+        const x2 = xinit + size;
         const y1 = yinit;
-        const y2 = yinit + 4;
+        const y2 = yinit + size;
 
         const h11 = TerrainGenerator.getTerrainHeight(x1, y1);
         const h12 = TerrainGenerator.getTerrainHeight(x1, y2);
         const h21 = TerrainGenerator.getTerrainHeight(x2, y1);
         const h22 = TerrainGenerator.getTerrainHeight(x2, y2);
 
-        const foundationZ = Math.max(h11,h12,h21,h22);
+        if(!foundationZ) {
+            foundationZ = Math.max(h11,h12,h21,h22);
+        }
 
         //Create pillars to support elevated floor
         blocks.push(...Structures.createPillar(x1, y1, h11, foundationZ, style.pillar));
@@ -138,27 +184,27 @@ const FiveByFive = {
         blocks.push(...Structures.createPillar(x2, y2, h22, foundationZ, style.pillar));
 
         // //create roof
-         blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + 4, style));
+         blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + size - 1, style));
 
         //Grid
-         blocks.push(...Structures.createPillar(x1, y1, foundationZ, foundationZ + 4, style.pillar));
-         blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + 4, style.pillar));
-         blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + 4, style.pillar));
-         blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + 4, style.pillar));
+         blocks.push(...Structures.createPillar(x1, y1, foundationZ, foundationZ + size - 1, style.pillar));
+         blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + size - 1, style.pillar));
+         blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + size - 1, style.pillar));
+         blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + size - 1, style.pillar));
 
  
         //create walls
-        if(code[0] == 'w') {
-            blocks.push(...Structures.createXWall(x1 + 1, x2 - 1, y1, foundationZ, false, true, style));
+        if(["W", "w", "D", "d"].includes(code[0])) {
+            blocks.push(...Structures.createXWall(x1 + 1, x2 - 1, y1, foundationZ, code[0] == 'w', code[0] == 'd', style));
         }
-        if(code[1] == 'w') {
-            blocks.push(...Structures.createXWall(x1 + 1, x2 - 1, y2, foundationZ, true, false, style));
+        if(["W", "w", "D", "d"].includes(code[1])) {
+            blocks.push(...Structures.createYWall(y1 + 1, y2 - 1, x1, foundationZ, code[1] == 'w', code[1] == 'd', style));
         }
-        if(code[2] == 'w') {
-            blocks.push(...Structures.createYWall(y1 + 1, y2 - 1, x1, foundationZ, true, false, style));
+        if(["W", "w", "D", "d"].includes(code[2])) {
+            blocks.push(...Structures.createXWall(x1 + 1, x2 - 1, y2, foundationZ, code[2] == 'w', code[2] == 'd', style));
         }
-        if(code[3] == 'w') {
-            blocks.push(...Structures.createYWall(y1 + 1, y2 - 1, x2, foundationZ, true, false, style));
+        if(["W", "w", "D", "d"].includes(code[3])) {
+            blocks.push(...Structures.createYWall(y1 + 1, y2 - 1, x2, foundationZ, code[3] == 'w', code[3] == 'd', style));
         }
 
         return blocks;
