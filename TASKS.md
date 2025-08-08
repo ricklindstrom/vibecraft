@@ -38,3 +38,4 @@
  - [ ] POLISH: Rotate minimap to align with direction of player.
  - [ ] TERRAIN CALC: Improve perlin noise function to make more natural terrain.
  
+- [ ] STRUCTURES - Create 5x5 building system

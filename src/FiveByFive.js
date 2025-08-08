@@ -9,23 +9,22 @@ const FiveByFive = {
         // Only build on even chunks
         if(this.mod(chunkX, 2) !== 0 || this.mod(chunkY, 2) !== 0) return false;
         
+        const x1 = x - 5;
+        const x2 = x + 5;
+        const y1 = y - 5;
+        const y2 = y + 5;
+
+        const h11 = TerrainGenerator.getTerrainHeight(x1, y1);
+        const h12 = TerrainGenerator.getTerrainHeight(x1, y2);
+        const h21 = TerrainGenerator.getTerrainHeight(x2, y1);
+        const h22 = TerrainGenerator.getTerrainHeight(x2, y2);
+
+        const lowest = Math.min(h11,h12,h21,h22);
+        const highest = Math.max(h11,h12,h21,h22);
+        const diff = highest - lowest;
+        if(diff > 7 || lowest < 0) return false;
+
         return true;
-
-        // const x1 = x - 5;
-        // const x2 = x + 5;
-        // const y1 = y - 5;
-        // const y2 = y + 5;
-
-        // const h11 = TerrainGenerator.getTerrainHeight(x1, y1);
-        // const h12 = TerrainGenerator.getTerrainHeight(x1, y2);
-        // const h21 = TerrainGenerator.getTerrainHeight(x2, y1);
-        // const h22 = TerrainGenerator.getTerrainHeight(x2, y2);
-
-        // const lowest = Math.min(h11,h12,h21,h22);
-        // const highest = Math.max(h11,h12,h21,h22);
-        // const diff = highest - lowest;
-        // if(diff > 7 || lowest < 0) return false;
-
         // return this.random(chunkX, chunkY) > 0.5 && this.random(chunkY, chunkX) > 0.5;
     },
 
@@ -52,7 +51,7 @@ const FiveByFive = {
      * @param {object} style - One of Structures.STYLES
      * @returns {Array} Array of blocks
      */
-    createHouse(xinit, yinit, size = 10, style = undefined) {
+    createHouse(xinit, yinit, code = "dwww", size = 10, style = undefined) {
         // Deterministic style selection if not provided
         if (!style) {
             style = this.getRandomStyle(xinit, yinit);
@@ -84,23 +83,33 @@ const FiveByFive = {
          blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + 4, style));
 
         //Grid
-         //blocks.push(...Structures.createPillar(x1, y1, foundationZ, foundationZ + 4, style.pillar));
-         //blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + 4, style.pillar));
-         //blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + 4, style.pillar));
-         //blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + 4, style.pillar));
+         blocks.push(...Structures.createPillar(x1, y1, foundationZ, foundationZ + 4, style.pillar));
+         blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + 4, style.pillar));
+         blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + 4, style.pillar));
+         blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + 4, style.pillar));
 
- 
-        //create walls  
-        blocks.push(...Structures.createXWall(x1, x2, y1, foundationZ, false, true, style));
-        blocks.push(...Structures.createXWall(x1, x2, y2, foundationZ, true, false, style));
-        blocks.push(...Structures.createYWall(y1, y2, x1, foundationZ, true, false, style));
-        blocks.push(...Structures.createYWall(y1, y2, x2, foundationZ, true, false, style));
+        //Walls
+
+        if(["W", "w", "D", "d"].includes(code[0])) {
+            blocks.push(...Structures.createXWall(x1 + 1, x2 - 1, y1, foundationZ, code[0] == 'w', code[0] == 'd', style));
+        }
+
+        if(["W", "w", "D", "d"].includes(code[1])) {
+            blocks.push(...Structures.createYWall(y1 + 1, y2 - 1, x1, foundationZ, code[1] == 'w', code[1] == 'd', style));
+        }
+
+        if(["W", "w", "D", "d"].includes(code[2])) {
+            blocks.push(...Structures.createXWall(x1 + 1, x2 - 1, y2, foundationZ, code[2] == 'w', code[2] == 'd', style));
+        }
+
+        if(["W", "w", "D", "d"].includes(code[3])) {
+            blocks.push(...Structures.createYWall(y1 + 1, y2 - 1, x2, foundationZ, code[3] == 'w', code[3] == 'd', style));
+        }
 
         return blocks;
     },
 
-
-    createCell(xinit, yinit, size = 10, style = undefined) {
+    createCell(xinit, yinit, code = "wwww", size = 10, style = undefined) {
         // Deterministic style selection if not provided
         if (!style) {
             style = this.getRandomStyle(xinit, yinit);
@@ -109,9 +118,6 @@ const FiveByFive = {
             }
         }
         const blocks = [];
-
-        //const sizeX = Math.floor(size * 1 * (1 + this.random(centerX + 10, centerY + 20)));
-        //const sizeY = Math.floor(size * 1 * (1 + this.random(centerX + 100, centerY - 20)));
 
         const x1 = xinit;
         const x2 = xinit + 4;
@@ -131,15 +137,29 @@ const FiveByFive = {
         blocks.push(...Structures.createPillar(x2, y1, h21, foundationZ, style.pillar));
         blocks.push(...Structures.createPillar(x2, y2, h22, foundationZ, style.pillar));
 
-        // //create floor
-         blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ, style));
+        // //create roof
+         blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + 4, style));
 
         //Grid
-         blocks.push(...Structures.createPillar(x1, y1, foundationZ, foundationZ + 24, style.pillar));
+         blocks.push(...Structures.createPillar(x1, y1, foundationZ, foundationZ + 4, style.pillar));
          blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + 4, style.pillar));
          blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + 4, style.pillar));
          blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + 4, style.pillar));
 
+ 
+        //create walls
+        if(code[0] == 'w') {
+            blocks.push(...Structures.createXWall(x1 + 1, x2 - 1, y1, foundationZ, false, true, style));
+        }
+        if(code[1] == 'w') {
+            blocks.push(...Structures.createXWall(x1 + 1, x2 - 1, y2, foundationZ, true, false, style));
+        }
+        if(code[2] == 'w') {
+            blocks.push(...Structures.createYWall(y1 + 1, y2 - 1, x1, foundationZ, true, false, style));
+        }
+        if(code[3] == 'w') {
+            blocks.push(...Structures.createYWall(y1 + 1, y2 - 1, x2, foundationZ, true, false, style));
+        }
 
         return blocks;
     },

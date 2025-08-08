@@ -1,5 +1,5 @@
 const Structures = {
-    wallHeight: 5,
+    wallHeight: 3,
 
     ROOF_TYPES: {
         PYRAMID: 'PYRAMID',
@@ -141,10 +141,11 @@ const Structures = {
         for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
             for (let z = foundationZ; z <= foundationZ + this.wallHeight; z++) {
                 const isCorner = (x === x1 || x == x2);
-                const isGap = (hasWindow || hasDoor ) && (z > gapBottom &&  z < gapTop && (x === gapLocation || x === gapLocation + 1));
-                if(isCorner) {
-                    blocks.push({ x, y, z, type: style.trim });
-                } if(!isGap) {
+                const isGap = (hasWindow || hasDoor ) && (z > gapBottom &&  z < gapTop && (x === gapLocation));
+                // if(isCorner) {
+                //     blocks.push({ x, y, z, type: style.trim });
+                // } 
+                if(!isGap) {
                     blocks.push({ x, y, z, type: style.wall });
                 } else if(hasWindow) {
                     blocks.push({ x, y, z, type: style.window });
@@ -164,11 +165,12 @@ const Structures = {
 
         for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
             for (let z = foundationZ; z <= foundationZ + this.wallHeight; z++) {
-                const isGap = (hasWindow || hasDoor ) && (z > gapBottom &&  z < gapTop && (y === gapLocation || y === gapLocation + 1));
+                const isGap = (hasWindow || hasDoor ) && (z > gapBottom &&  z < gapTop && (y === gapLocation));
                 const isCorner = (y === y1 || y === y2);
-                if(isCorner) {
-                    blocks.push({ x, y, z, type:style.trim });
-                } else if(!isGap) {
+                // if(isCorner) {
+                //     blocks.push({ x, y, z, type:style.trim });
+                // }
+                if(!isGap) {
                     blocks.push({ x, y, z, type:style.wall });
                 } else if(hasWindow) {
                     blocks.push({ x, y, z, type: style.window });
