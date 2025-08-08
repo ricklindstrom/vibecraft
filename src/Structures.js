@@ -8,7 +8,7 @@ const Structures = {
     },
 
     STYLES : {
-        WHITE:     { trim: BLOCK_TYPES.BLACK,  wall: BLOCK_TYPES.WHITE, roof: BLOCK_TYPES.WHITE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.BLACK, floor: BLOCK_TYPES.STONE, roofType: 'GABLE' },
+        WHITE:     { trim: BLOCK_TYPES.WHITE,  wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.WHITE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.BLACK, floor: BLOCK_TYPES.STONE, roofType: 'GABLE' },
 
         MARBLE:     { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.MARBLE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.MARBLE, floor: BLOCK_TYPES.STONE, roofType: 'PYRAMID' },
         WOOD:       { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.WOOD,   floor: BLOCK_TYPES.STONE, roofType: 'GABLE' },

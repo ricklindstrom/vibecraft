@@ -46,6 +46,7 @@ const FiveByFive = {
 
         if (!style) {
             style = this.getRandomStyle(xinit, yinit);
+            console.log(style);
             if(!style) {
                 return [];
             }
@@ -62,6 +63,23 @@ const FiveByFive = {
         for(let f = 0; f < floors; f++) {
             for(let x = 0; x < xsize; x++) {    
                 for(let y = 0; y < ysize; y++) {
+
+                    if(f==0) {
+                        // create initial floor
+                        blocks.push(...Structures.createFloor(xinit, yinit, xinit + xsize * cellSize - 1, yinit + ysize * cellSize - 1, foundationZ, style));
+
+                        // create pillars to support elevated floor
+                        blocks.push(...Structures.createPillar(xinit, yinit, h11, foundationZ, style.pillar));
+                        blocks.push(...Structures.createPillar(xinit, yinit + ysize * cellSize - 1, h12, foundationZ, style.pillar));
+                        blocks.push(...Structures.createPillar(xinit + xsize * cellSize - 1, yinit, h21, foundationZ, style.pillar));
+                        blocks.push(...Structures.createPillar(xinit + xsize * cellSize - 1, yinit + ysize * cellSize - 1, h22, foundationZ, style.pillar));
+
+                    }
+
+                    //create roof for current floor
+                    blocks.push(...Structures.createFloor(xinit, yinit, xinit + xsize * cellSize - 1, yinit + ysize * cellSize - 1, foundationZ + ((f +1)  * cellSize), style));
+                    
+
                     if(x==0 && y==0) {
                         blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "dw  ", cellSize, style));
                     } else if(x == 0) {
@@ -177,20 +195,20 @@ const FiveByFive = {
             foundationZ = Math.max(h11,h12,h21,h22);
         }
 
-        //Create pillars to support elevated floor
-        blocks.push(...Structures.createPillar(x1, y1, h11, foundationZ, style.pillar));
-        blocks.push(...Structures.createPillar(x1, y2, h12, foundationZ, style.pillar));
-        blocks.push(...Structures.createPillar(x2, y1, h21, foundationZ, style.pillar));
-        blocks.push(...Structures.createPillar(x2, y2, h22, foundationZ, style.pillar));
+        // //Create pillars to support elevated floor
+        // blocks.push(...Structures.createPillar(x1, y1, h11, foundationZ, style.pillar));
+        // blocks.push(...Structures.createPillar(x1, y2, h12, foundationZ, style.pillar));
+        // blocks.push(...Structures.createPillar(x2, y1, h21, foundationZ, style.pillar));
+        // blocks.push(...Structures.createPillar(x2, y2, h22, foundationZ, style.pillar));
 
-        // //create roof
-         blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + size - 1, style));
+        // // //create floor or roof
+        //  blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + size, style));
 
         //Grid
-         blocks.push(...Structures.createPillar(x1, y1, foundationZ, foundationZ + size - 1, style.pillar));
-         blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + size - 1, style.pillar));
-         blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + size - 1, style.pillar));
-         blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + size - 1, style.pillar));
+         blocks.push(...Structures.createPillar(x1, y1, foundationZ, foundationZ + size - 1, style.trim));
+         blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + size - 1, style.trim));
+         blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + size - 1, style.trim));
+         blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + size - 1, style.trim));
 
  
         //create walls
