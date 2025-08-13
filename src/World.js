@@ -9,7 +9,13 @@ const BLOCK_TYPES = {
     GLASS: 6,
     AIR: 7, // Empty space, not rendered
     WHITE: 8,
-    BLACK: 9
+    BLACK: 9,
+    // New glowing blocks for interior lighting
+    GLOWSTONE: 10,      // Bright white glow
+    LANTERN: 11,        // Warm orange glow
+    TORCH: 12,          // Flickering yellow glow
+    CRYSTAL: 13,        // Blue-white glow
+    FIREPLACE: 14       // Red-orange glow
 };
 
 // Structure generation result format
@@ -142,7 +148,33 @@ class World {
                 opacity: 0.9
             }),
             [BLOCK_TYPES.WHITE]: new THREE.MeshLambertMaterial({ color: 0xffffff }),
-            [BLOCK_TYPES.BLACK]: new THREE.MeshLambertMaterial({ color: 0x000000 })
+            [BLOCK_TYPES.BLACK]: new THREE.MeshLambertMaterial({ color: 0x000000 }),
+            // New glowing blocks for interior lighting
+            [BLOCK_TYPES.GLOWSTONE]: new THREE.MeshLambertMaterial({ 
+                color: 0xffffcc,
+                emissive: 0xffffcc,
+                emissiveIntensity: 0.8
+            }),
+            [BLOCK_TYPES.LANTERN]: new THREE.MeshLambertMaterial({ 
+                color: 0xffaa44,
+                emissive: 0xffaa44,
+                emissiveIntensity: 0.6
+            }),
+            [BLOCK_TYPES.TORCH]: new THREE.MeshLambertMaterial({ 
+                color: 0xffdd88,
+                emissive: 0xffdd88,
+                emissiveIntensity: 0.7
+            }),
+            [BLOCK_TYPES.CRYSTAL]: new THREE.MeshLambertMaterial({ 
+                color: 0x88ccff,
+                emissive: 0x88ccff,
+                emissiveIntensity: 0.5
+            }),
+            [BLOCK_TYPES.FIREPLACE]: new THREE.MeshLambertMaterial({ 
+                color: 0xff6644,
+                emissive: 0xff6644,
+                emissiveIntensity: 0.9
+            })
         };
     }
 
