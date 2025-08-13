@@ -47,7 +47,7 @@ const FiveByFive = {
     }, 
 
 
-    createBuilding(xinit, yinit, xsize = 3, ysize = 3, floors = 3, style = undefined) {
+    createBuilding(xinit, yinit, xsize = 3, ysize = 3, floors = 3, style = undefined, atrium = 1) {
         const blocks = [];
 
         if (!style) {
@@ -58,7 +58,6 @@ const FiveByFive = {
             }
         }
         let cellSize = 4;
-        let atrium = 1;
        
         //Get the highest point of the terrain around the building
         const h11 = TerrainGenerator.getTerrainHeight(xinit, yinit);
@@ -108,52 +107,43 @@ const FiveByFive = {
                         blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), " +w+", cellSize, style));
                     }
 
-                    if(x > 0 && xdist < atrium) {
-                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "    ", cellSize, style));
-                    }
-                    if(y > 0 && ydist < atrium) {
-                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "    ", cellSize, style));
+                    if (atrium > 0) {
+                        if(x > 0 && xdist < atrium) {
+                            blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "    ", cellSize, style));
+                        }
+                        if(y > 0 && ydist < atrium) {
+                            blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "    ", cellSize, style));
+                        }
+
+                        if(x == atrium && ydist > atrium) {
+                            blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "+ +d", cellSize, style));
+                        }
+                        if(y == atrium && xdist > atrium) {
+                            blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), " +d+", cellSize, style));
+                        }
+
+
+                        if(x < xsize-1 && xdist < atrium) {
+                            blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "    ", cellSize, style));
+                        }
+                        if(y > ysize-1 && ydist < atrium) {
+                            blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "    ", cellSize, style));
+                        }
+
+                        if(x == xsize - 1 - atrium && ydist > atrium) {
+                            blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "+d+ ", cellSize, style));
+                        }
+                        if(y == ysize - 1 - atrium && xdist > atrium) {
+                            blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "d+ +", cellSize, style));
+                        }
                     }
 
-                    if(x == atrium && ydist > atrium) {
-                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "+ +d", cellSize, style));
-                    }
-                    if(y == atrium && xdist > atrium) {
-                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), " +d+", cellSize, style));
-                    }
-
-
-                    if(x < xsize-1 && xdist < atrium) {
-                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "    ", cellSize, style));
-                    }
-                    if(y > ysize-1 && ydist < atrium) {
-                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "    ", cellSize, style));
-                    }
-
-                    if(x == xsize - 1 - atrium && ydist > atrium) {
-                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "+d+ ", cellSize, style));
-                    }
-                    if(y == ysize - 1 - atrium && xdist > atrium) {
-                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "d+ +", cellSize, style));
-                    }
-
-                    // if(xdist == 2 || ydist == 2) {
-                    //     blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "++++", cellSize, style));
-                    // } else if(xdist > 3 && ydist > 3 ) {
-                    //     blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "++++", cellSize, style));
-                    // }
-
-                    // if(x > 0 && y > 0 && x < xsize-1 && y < ysize-1) {
-                    //     if(x < xsize * 0.6 && y < ysize * 0.6) {
-                    //         blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), " w w", cellSize, Structures.STYLES.MARBLE));
-                    //     } else {
-                    //         blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "w w ", cellSize, Structures.STYLES.WOOD));
-                    //     }
-                    // }
                     
                 }
             }
         }
+
+        //TODO If there is no atrium we can add a roof to the whole building using the roof style
 
         return blocks;
     },
