@@ -102,6 +102,8 @@ const Houses = {
         } else if(style.roofType === 'GABLE') {
             // Add support for GABLE roof
             blocks.push(...Structures.createGableRoof(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style));
+        } else if(style.roofType === 'BATTLEMENT') {
+            blocks.push(...FiveByFive.createRoof(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style));
         }
         return blocks;
     },
