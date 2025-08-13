@@ -1,15 +1,17 @@
 
 What if we encode a cell/room/house based on its four walls.
 
++ = grid only
 w = wall with window
 W = 3 = wall
 d = wall with door
 a = arch
 0 = ' ' = empty
 b = battlement = [-_-_-] = 21212 maybe
+B = battlement = [=-=-=] = 32323 maybe
 1 = '_' = f = fence = [_____] = 11111 maybe
 2 = '-' = F = fence = [-----] = 22222 maybe
-. = assert that the segment has been previously defined
+. = assert that the segment has been previously defined in a different cell
 
 
 

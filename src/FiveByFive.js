@@ -1,5 +1,11 @@
 const FiveByFive = {
 
+    //variable to control the size of the building cells
+    ENABLE_WALLS : true,
+    ENABLE_GRID : true,
+    ENABLE_ROOF : false,
+    ENABLE_CELL_ROOF : true,
+
     // Better mathmatical modulo that works for negative numbers
     mod(x, n) {
         return ((x % n) + n) % n;
@@ -52,50 +58,99 @@ const FiveByFive = {
             }
         }
         let cellSize = 4;
-
+        let atrium = 1;
+       
+        //Get the highest point of the terrain around the building
         const h11 = TerrainGenerator.getTerrainHeight(xinit, yinit);
-        const h12 = TerrainGenerator.getTerrainHeight(xinit, yinit + ysize * cellSize - 1);
-        const h21 = TerrainGenerator.getTerrainHeight(xinit + xsize * cellSize - 1, yinit);
-        const h22 = TerrainGenerator.getTerrainHeight(xinit + xsize * cellSize - 1, yinit + ysize * cellSize - 1);
+        const h12 = TerrainGenerator.getTerrainHeight(xinit, yinit + ysize * cellSize);
+        const h21 = TerrainGenerator.getTerrainHeight(xinit + xsize * cellSize, yinit);
+        const h22 = TerrainGenerator.getTerrainHeight(xinit + xsize * cellSize, yinit + ysize * cellSize);
         let foundationZ = Math.max(h11,h12,h21,h22) + 1;
-        
+
+        // create pillars to support elevated floor
+        blocks.push(...Structures.createPillar(xinit, yinit, h11, foundationZ, style.pillar));
+        blocks.push(...Structures.createPillar(xinit, yinit + ysize * cellSize, h12, foundationZ, style.pillar));
+        blocks.push(...Structures.createPillar(xinit + xsize * cellSize, yinit, h21, foundationZ, style.pillar));
+        blocks.push(...Structures.createPillar(xinit + xsize * cellSize, yinit + ysize * cellSize, h22, foundationZ, style.pillar));
+
+        // create initial floor
+        blocks.push(...Structures.createFloor(xinit, yinit, xinit + xsize * cellSize, yinit + ysize * cellSize, foundationZ, style));
 
         for(let f = 0; f < floors; f++) {
-            for(let x = 0; x < xsize; x++) {    
+            //create roof for current floor
+            //This creates one giant floor for the whole area (Which we might not want?)
+            if(this.ENABLE_ROOF) {
+                blocks.push(...Structures.createFloor(xinit, yinit, xinit + xsize * cellSize, yinit + ysize * cellSize, foundationZ + ((f + 1) * cellSize), style));
+            }
+
+            for(let x = 0; x < xsize; x++) {
                 for(let y = 0; y < ysize; y++) {
 
-                    if(f==0) {
-                        // create initial floor
-                        blocks.push(...Structures.createFloor(xinit, yinit, xinit + xsize * cellSize - 1, yinit + ysize * cellSize - 1, foundationZ, style));
-
-                        // create pillars to support elevated floor
-                        blocks.push(...Structures.createPillar(xinit, yinit, h11, foundationZ, style.pillar));
-                        blocks.push(...Structures.createPillar(xinit, yinit + ysize * cellSize - 1, h12, foundationZ, style.pillar));
-                        blocks.push(...Structures.createPillar(xinit + xsize * cellSize - 1, yinit, h21, foundationZ, style.pillar));
-                        blocks.push(...Structures.createPillar(xinit + xsize * cellSize - 1, yinit + ysize * cellSize - 1, h22, foundationZ, style.pillar));
-
+                    let xdist = Math.min(x, xsize - x - 1);
+                    let ydist = Math.min(y, ysize - y - 1);
+ 
+                    //Create a door at the corner of the building on the ground floor
+                    if(x== 0 && y == 0 && f==0) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "dw++", cellSize, style));
+                        continue
+                    }
+                    
+                    if(x == 0) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "+w+ ", cellSize, style));
+                    }
+                    if(y == 0) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "w+ +", cellSize, style));
+                    }
+                    if(x == xsize-1) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "+ +w", cellSize, style));
+                    }
+                    if(y == ysize-1) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), " +w+", cellSize, style));
                     }
 
-                    //create roof for current floor
-                    blocks.push(...Structures.createFloor(xinit, yinit, xinit + xsize * cellSize - 1, yinit + ysize * cellSize - 1, foundationZ + ((f +1)  * cellSize), style));
-                    
+                    if(x > 0 && xdist < atrium) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "    ", cellSize, style));
+                    }
+                    if(y > 0 && ydist < atrium) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "    ", cellSize, style));
+                    }
 
-                    if(x==0 && y==0) {
-                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "dw  ", cellSize, style));
-                    } else if(x == 0) {
-                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), " w  ", cellSize, style));
-                    } else if(y == 0) {
-                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "w   ", cellSize, style));
-                    } 
-                    
-                    if(x==xsize-1 && y==ysize-1) {
-                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "  ww", cellSize, style));
-                    } else if(x == xsize-1) {
-                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "   w", cellSize, style));
-                    } else if(y == ysize-1) {
-                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "  w ", cellSize, style));
-                    }   
+                    if(x == atrium && ydist > atrium) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "+ +d", cellSize, style));
+                    }
+                    if(y == atrium && xdist > atrium) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), " +d+", cellSize, style));
+                    }
 
+
+                    if(x < xsize-1 && xdist < atrium) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "    ", cellSize, style));
+                    }
+                    if(y > ysize-1 && ydist < atrium) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "    ", cellSize, style));
+                    }
+
+                    if(x == xsize - 1 - atrium && ydist > atrium) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "+d+ ", cellSize, style));
+                    }
+                    if(y == ysize - 1 - atrium && xdist > atrium) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "d+ +", cellSize, style));
+                    }
+
+                    // if(xdist == 2 || ydist == 2) {
+                    //     blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "++++", cellSize, style));
+                    // } else if(xdist > 3 && ydist > 3 ) {
+                    //     blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "++++", cellSize, style));
+                    // }
+
+                    // if(x > 0 && y > 0 && x < xsize-1 && y < ysize-1) {
+                    //     if(x < xsize * 0.6 && y < ysize * 0.6) {
+                    //         blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), " w w", cellSize, Structures.STYLES.MARBLE));
+                    //     } else {
+                    //         blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "w w ", cellSize, Structures.STYLES.WOOD));
+                    //     }
+                    // }
+                    
                 }
             }
         }
@@ -141,16 +196,29 @@ const FiveByFive = {
         blocks.push(...Structures.createPillar(x2, y2, h22, foundationZ, style.pillar));
 
         // //create roof
-         blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + size - 1, style));
+        blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + size - 1, style));
 
         //Grid
-         blocks.push(...Structures.createPillar(x1, y1, foundationZ, foundationZ + size - 1, style.pillar));
-         blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + size - 1, style.pillar));
-         blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + size - 1, style.pillar));
-         blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + size - 1, style.pillar));
+        if(this.ENABLE_GRID) {
+            if(["W", "w", "D", "d", "+"].includes(code[0])) {
+                blocks.push(...Structures.createPillar(x1, y1, foundationZ, foundationZ + size - 1, style.pillar));
+            }
+            if(["W", "w", "D", "d", "+"].includes(code[1])) {
+                blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + size - 1, style.pillar));
+            }
+            if(["W", "w", "D", "d", "+"].includes(code[2])) {    
+                blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + size - 1, style.pillar));
+            }
+            if(["W", "w", "D", "d", "+"].includes(code[3])) {
+            blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + size - 1, style.pillar));
+            }
+        }
+
+         if(!this.ENABLE_WALLS) {
+            return blocks;
+         }
 
         //Walls
-
         if(["W", "w", "D", "d"].includes(code[0])) {
             blocks.push(...Structures.createXWall(x1 + 1, x2 - 1, y1, foundationZ, code[0] == 'w', code[0] == 'd', style));
         }
@@ -181,6 +249,7 @@ const FiveByFive = {
         }
         const blocks = [];
 
+
         const x1 = xinit;
         const x2 = xinit + size;
         const y1 = yinit;
@@ -202,14 +271,29 @@ const FiveByFive = {
         // blocks.push(...Structures.createPillar(x2, y2, h22, foundationZ, style.pillar));
 
         // // //create floor or roof
-        //  blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + size, style));
+        if(this.ENABLE_CELL_ROOF) {
+            blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + size, style));
+        }
 
         //Grid
-         blocks.push(...Structures.createPillar(x1, y1, foundationZ, foundationZ + size - 1, style.trim));
-         blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + size - 1, style.trim));
-         blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + size - 1, style.trim));
-         blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + size - 1, style.trim));
+        if(this.ENABLE_GRID) {
+            if(["W", "w", "D", "d", "+"].includes(code[0])) {
+                blocks.push(...Structures.createPillar(x1, y1, foundationZ, foundationZ + size - 1, style.pillar));
+            }
+            if(["W", "w", "D", "d", "+"].includes(code[1])) {
+                blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + size - 1, style.pillar));
+            }
+            if(["W", "w", "D", "d", "+"].includes(code[2])) {    
+                blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + size - 1, style.pillar));
+            }
+            if(["W", "w", "D", "d", "+"].includes(code[3])) {
+            blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + size - 1, style.pillar));
+            }
+        }
 
+         if(!this.ENABLE_WALLS) {
+            return blocks;
+         }
  
         //create walls
         if(["W", "w", "D", "d"].includes(code[0])) {
