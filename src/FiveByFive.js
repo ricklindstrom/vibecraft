@@ -454,8 +454,6 @@ const FiveByFive = {
         if(panelType === " ") { return ["   ", "   ", "   "]; } // Empty (Shouldn't actually be requested?)
         return ["WWW", "W W", "WWW"]; // Default
     },
-
-
 };
 
 // Support both browser and Node.js environments

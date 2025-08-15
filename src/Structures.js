@@ -113,8 +113,6 @@ const Structures = {
         return blocks;
     },
 
-
-
     createPillar(x, y, bottom, top, type = BLOCK_TYPES.WOOD) {
         const blocks = [];
         for(let z = bottom; z <= top; z++) { blocks.push({ x, y, z, type }); }
@@ -125,7 +123,7 @@ const Structures = {
         const blocks = [];
         for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
             for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
-                blocks.push({ x, y, z, type: style.floor });
+                blocks.push({ x, y, z, type: style.trim });
             }
         }
         this.addTerrainOverride(x1, y1, x2, y2, z);
@@ -271,6 +269,66 @@ const Structures = {
                 blocks.push({ x: startX + x, y: stopY, z: z + dz, type: style.trim });
             }
         }
+        return blocks;
+    },
+
+    createHouse(x, y, z, width, height, style = STYLES.WOOD, pattern = null) {
+        // Default pattern if none provided
+        if (!pattern) {
+            pattern = [
+                ['W', 'W', 'W', 'W', 'W'],
+                ['W', ' ', ' ', ' ', 'W'],
+                ['W', ' ', ' ', ' ', 'W'],
+                ['W', ' ', ' ', ' ', 'W'],
+                ['W', 'W', 'W', 'W', 'W']
+            ];
+        }
+        
+        const blocks = [];
+        const foundationZ = z;
+        const wallTopZ = foundationZ + this.wallHeight;
+        const roofZ = wallTopZ;
+        
+        // Create foundation
+        for (let row = 0; row < height; row++) {
+            for (let column = 0; column < width; column++) {
+                if(pattern[row][column] === 'W') {
+                    blocks.push({ x: x + column, y: y + row, z: foundationZ, type: style.trim });
+                }
+            }
+        }
+
+        // Create walls
+        for (let row = 0; row < height; row++) {
+            for (let column = 0; column < width; column++) {
+                if(pattern[row][column] === 'W') {
+                    // Check if the current cell is a corner
+                    const isCorner = (column === 0 || column === width - 1) && (row === 0 || row === height - 1);
+                    const hasWindow = (column > 0 && column < width - 1) && (row > 0 && row < height - 1);
+                    const hasDoor = (column === 0 || column === width - 1) && (row === 0 || row === height - 1);
+
+                    if(isCorner) {
+                        blocks.push({ x: x + column, y: y + row, z: wallTopZ, type: style.trim });
+                    } else if(hasWindow) {
+                        blocks.push({ x: x + column, y: y + row, z: wallTopZ, type: style.window });
+                    } else if(hasDoor) {
+                        blocks.push({ x: x + column, y: y + row, z: wallTopZ, type: style.door });
+                    } else {
+                        blocks.push({ x: x + column, y: y + row, z: wallTopZ, type: style.wall });
+                    }
+                }
+            }
+        }
+
+        // Create roof
+        for (let row = 0; row < height; row++) {
+            for (let column = 0; column < width; column++) {
+                if(pattern[row][column] === 'W') {
+                    blocks.push({ x: x + column, y: y + row, z: roofZ, type: style.roof });
+                }
+            }
+        }
+
         return blocks;
     }
 

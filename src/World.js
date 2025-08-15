@@ -563,7 +563,7 @@ class World {
         const centerY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
         if(FiveByFive.isBuildable(chunkX, chunkY, centerX, centerY)) {
             //let houseBlocks = FiveByFive.createHouse(centerX, centerY);
-            let houseBlocks = FiveByFive.createBuilding(centerX, centerY, 3, 3, 2);
+            let houseBlocks = FiveByFive.createBuilding(centerX, centerY, 6, 6, 2);
             this.generateBlocks(houseBlocks, chunkGroup); 
         }
 
