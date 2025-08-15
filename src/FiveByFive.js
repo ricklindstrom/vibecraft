@@ -52,7 +52,6 @@ const FiveByFive = {
 
         if (!style) {
             style = this.getRandomStyle(xinit, yinit);
-            console.log(style);
             if(!style) {
                 return [];
             }
@@ -116,10 +115,10 @@ const FiveByFive = {
                         }
 
                         if(x == atrium && ydist > atrium) {
-                            blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "+ +d", cellSize, style));
+                            blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "+ +A", cellSize, style));
                         }
                         if(y == atrium && xdist > atrium) {
-                            blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), " +d+", cellSize, style));
+                            blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), " +A+", cellSize, style));
                         }
 
 
@@ -139,26 +138,26 @@ const FiveByFive = {
                     }
 
                     //Battlements (this should probably be a separate reusable method)
-                    if(f === floors - 1) {
-                        if(x == 0) {
-                            blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), " b  ", cellSize, style));
-                        }
-                        if(y == 0) {
-                            blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "b   ", cellSize, style));
-                        }
-                        if(x == xsize-1) {
-                            blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "   b", cellSize, style));
-                        }
-                        if(y == ysize-1) {
-                            blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "  b ", cellSize, style));
-                        }
-                    }        
+                    // if(f === floors - 1) {
+                    //     if(x == 0) {
+                    //         blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), " b  ", cellSize, style));
+                    //     }
+                    //     if(y == 0) {
+                    //         blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "b   ", cellSize, style));
+                    //     }
+                    //     if(x == xsize-1) {
+                    //         blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "   b", cellSize, style));
+                    //     }
+                    //     if(y == ysize-1) {
+                    //         blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "  b ", cellSize, style));
+                    //     }
+                    // }        
                     
                 }
             }
         }
 
-        //blocks.push(...this.createRoof(xinit, yinit, xinit + xsize * cellSize, yinit + ysize * cellSize, foundationZ + ((floors + 1) * cellSize), style));
+        blocks.push(...this.createRoof(xinit, yinit, xinit + xsize * cellSize, yinit + ysize * cellSize, foundationZ + ((floors + 2) * cellSize), style));
 
         //TODO If there is no atrium we can add a roof to the whole building using the roof style
 
@@ -166,7 +165,7 @@ const FiveByFive = {
     },
 
 
-    createRoof(xinit, yinit, xend, yend, z, style = undefined) {
+    createRoof(xinit, yinit, xend, yend, z, style = Structures.STYLES.STONE) {
         const blocks = [];
 
         if(!this.ENABLE_ROOF) {
@@ -175,7 +174,6 @@ const FiveByFive = {
 
         if (!style) {
             style = this.getRandomStyle(xinit, yinit);
-            console.log(style);
             if(!style) {
                 return [];
             }
@@ -185,6 +183,7 @@ const FiveByFive = {
         let xsize = Math.floor((xend - xinit) / cellSize);
         let ysize = Math.floor((yend - yinit) / cellSize);
 
+        //Put battlements on roof
         for(let x = 0; x < xsize; x++) {
             for(let y = 0; y < ysize; y++) {
                 if(x == 0) {
@@ -326,16 +325,16 @@ const FiveByFive = {
 
         //Grid
         if(this.ENABLE_GRID) {
-            if(["W", "w", "D", "d", "+"].includes(code[0])) {
+            if(["W", "w", "D", "d", "A", "+"].includes(code[0])) {
                 blocks.push(...Structures.createPillar(x1, y1, foundationZ, foundationZ + size - 1, style.trim));
             }
-            if(["W", "w", "D", "d", "+"].includes(code[1])) {
+            if(["W", "w", "D", "d", "A", "+"].includes(code[1])) {
                 blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + size - 1, style.trim));
-            }
-            if(["W", "w", "D", "d", "+"].includes(code[2])) {    
+            }   
+            if(["W", "w", "D", "d", "A", "+"].includes(code[2])) {    
                 blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + size - 1, style.trim));
             }
-            if(["W", "w", "D", "d", "+"].includes(code[3])) {
+            if(["W", "w", "D", "d", "A", "+"].includes(code[3])) {
             blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + size - 1, style.trim));
             }
         }
@@ -343,16 +342,30 @@ const FiveByFive = {
     if(this.ENABLE_WALLS) {
             //create walls
             if(["W", "w", "D", "d"].includes(code[0])) {
-                blocks.push(...Structures.createXWall(x1 + 1, x2 - 1, y1, foundationZ, code[0] == 'w', code[0] == 'd', style));
+                blocks.push(...this.createXWall(x1 + 1, x2 - 1, y1, foundationZ, code[0], style));
             }
             if(["W", "w", "D", "d"].includes(code[1])) {
-                blocks.push(...Structures.createYWall(y1 + 1, y2 - 1, x1, foundationZ, code[1] == 'w', code[1] == 'd', style));
+                blocks.push(...this.createYWall(y1 + 1, y2 - 1, x1, foundationZ, code[1], style));
             }
             if(["W", "w", "D", "d"].includes(code[2])) {
-                blocks.push(...Structures.createXWall(x1 + 1, x2 - 1, y2, foundationZ, code[2] == 'w', code[2] == 'd', style));
+                blocks.push(...this.createXWall(x1 + 1, x2 - 1, y2, foundationZ, code[2], style));
             }
             if(["W", "w", "D", "d"].includes(code[3])) {
-                blocks.push(...Structures.createYWall(y1 + 1, y2 - 1, x2, foundationZ, code[3] == 'w', code[3] == 'd', style));
+                blocks.push(...this.createYWall(y1 + 1, y2 - 1, x2, foundationZ, code[3], style));
+            }
+
+            //create walls
+            if(["A"].includes(code[0])) {
+                blocks.push(...this.createXWall(x1 + 1, x2 - 1, y1, foundationZ, code[0], style));
+            }
+            if(["A"].includes(code[1])) {
+                blocks.push(...this.createYWall(y1 + 1, y2 - 1, x1, foundationZ, code[1], style));
+            }
+            if(["A"].includes(code[2])) {
+                blocks.push(...this.createXWall(x1 + 1, x2 - 1, y2, foundationZ, code[2], style));
+            }
+            if(["A"].includes(code[3])) {
+                blocks.push(...this.createYWall(y1 + 1, y2 - 1, x2, foundationZ, code[3], style));
             }
     }
 
@@ -383,6 +396,64 @@ const FiveByFive = {
         return blocks;
     },
 
+    createXWall(x1, x2, y, foundationZ, panelType="W", style = Structures.STYLES.STONE) {
+        const blocks = [];
+
+        let column = 0;
+        for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
+            let row = 0;
+            for (let z = foundationZ; z < foundationZ + 3; z++) {
+                let cell = this.getPanelCell(row, column, panelType);
+                if(cell !== " ") {
+                    blocks.push({ x, y, z: foundationZ + row + 1, type: style.wall });
+                }
+                row++;
+            }
+            column++;
+        }
+        return blocks;
+    },
+
+    createYWall(y1, y2, x, foundationZ, panelType="W", style = Structures.STYLES.STONE) {
+        const blocks = [];
+
+        let column = 0;
+        for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
+            let row = 0;
+            for (let z = foundationZ; z < foundationZ + 3; z++) {
+                let cell = this.getPanelCell(row, column, panelType);
+                if(cell !== " ") {
+                    blocks.push({ x, y, z: foundationZ + row + 1, type: style.wall });
+                }
+                row++;
+            }
+            column++;
+        }
+        return blocks;
+    },
+
+    getPanelCell(row, column, panelType="W") {
+        let pattern = this.getPanelPattern(panelType);
+
+        //if the requested cell is outside the pattern, return an empty cell
+        if(row < 0 || row >= pattern.length || column < 0 || column >= pattern[row].length) {
+            return "W"; //Temporary return a wall to diagnose problems
+        }
+        return pattern[row][column];
+    },
+
+    getPanelPattern(panelType="W") {
+        if(panelType === "W") { return ["WWW", "WWW", "WWW"]; } // Wall
+        if(panelType === "w") { return ["WWW", "W W", "WWW"]; } // Wall with window
+        if(panelType === "D") { return ["W W", "W W", "WWW"]; } // Door
+        if(panelType === "d") { return ["W W", "W W", "WWW"]; } // Door
+        if(panelType === "A") { return ["   ", "   ", "W W"]; } // Arch
+        if(panelType === "b") { return [" W ", "   ", "   "]; } // Battlements (not really useful yet)
+        if(panelType === "B") { return ["WWW", " W ", "   "]; } // Higher battlement (not really useful yet)
+        console.log("Unknown panel type: " + panelType);
+        if(panelType === " ") { return ["   ", "   ", "   "]; } // Empty (Shouldn't actually be requested?)
+        return ["WWW", "W W", "WWW"]; // Default
+    },
 
 
 };
