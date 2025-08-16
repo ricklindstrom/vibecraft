@@ -191,27 +191,18 @@ class World {
         //     return chunkTrees; 
         // }
 
-        const random = (x, y) => {
-            const a = ((x * 1231) + (y * 5897)) % 123456789;
-            // Mix the bits using XOR and shifts
-            let b = a;
-            b = (b ^ (b << 13)) & 0x7fffffff;
-            b = (b ^ (b >> 17)) & 0x7fffffff;
-            b = (b ^ (b << 5)) & 0x7fffffff;
-            // Normalize to 0-1 range
-            return b / 0x7fffffff;
-        };
+        // Use the class random method for consistency
 
         for (let i = 0; i < treesPerChunk; i++) {
-            const localX = Math.floor(random(chunkX * i, chunkY) * this.CHUNK_SIZE);
-            const localY = Math.floor(random(chunkX, chunkY * i) * this.CHUNK_SIZE);
+            const localX = Math.floor(this.random(chunkX * i, chunkY) * this.CHUNK_SIZE);
+            const localY = Math.floor(this.random(chunkX, chunkY * i) * this.CHUNK_SIZE);
 
             const worldX = chunkX * this.CHUNK_SIZE + localX;
             const worldY = chunkY * this.CHUNK_SIZE + localY;
             const height = TerrainGenerator.getTerrainHeight(worldX, worldY);
 
             // Apply LOD-based tree chance
-            if (height > 0 && random(worldX, worldY) < lodLevel.treeChance) {
+            if (height > 0 && this.random(worldX, worldY) < lodLevel.treeChance) {
                 if(!Structures.getTerrainOverride(worldX, worldY)) {
                     chunkTrees.push({ x: worldX, y: worldY, groundHeight: height });
                 }
@@ -261,6 +252,18 @@ class World {
     // Better mathmatical modulo that works for negative numbers
     mod(x, n) {
         return ((x % n) + n) % n;
+    }
+
+    // Deterministic random function for consistent results
+    random(x, y) {
+        const a = ((x * 1231) + (y * 5897)) % 123456789;
+        // Mix the bits using XOR and shifts
+        let b = a;
+        b = (b ^ (b << 13)) & 0x7fffffff;
+        b = (b ^ (b >> 17)) & 0x7fffffff;
+        b = (b ^ (b << 5)) & 0x7fffffff;
+        // Normalize to 0-1 range
+        return b / 0x7fffffff;
     }
 
     /**
@@ -562,9 +565,16 @@ class World {
         const centerX = chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
         const centerY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
         if(FiveByFive.isBuildable(chunkX, chunkY, centerX, centerY)) {
-            //let houseBlocks = FiveByFive.createHouse(centerX, centerY);
-            let houseBlocks = FiveByFive.createBuilding(centerX, centerY, 6, 6, 2);
-            this.generateBlocks(houseBlocks, chunkGroup); 
+            if(this.random(centerX, centerY) > 0.66) {
+                let houseBlocks = FiveByFive.createHouse(centerX, centerY);
+                this.generateBlocks(houseBlocks, chunkGroup);
+            } else if(this.random(centerX, centerY) > 0.33) {
+                let houseBlocks = FiveByFive.createBuilding(centerX, centerY, 8, 8, 8);
+                this.generateBlocks(houseBlocks, chunkGroup);
+            } else {
+                let houseBlocks = Houses.createHouse(centerX, centerY);
+                this.generateBlocks(houseBlocks, chunkGroup);
+            }
         }
 
         chunkTrees = this.generateTreePositionsForChunk(chunkX, chunkY, lodLevel);

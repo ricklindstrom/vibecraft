@@ -47,7 +47,7 @@ const FiveByFive = {
     }, 
 
 
-    createBuilding(xinit, yinit, xsize = 3, ysize = 3, floors = 3, style = undefined, atrium = 1) {
+    createBuilding(xinit, yinit, xsize = 3, ysize = 3, floors = 3, style = undefined, atrium = 1, initialFloor = 0) {
         const blocks = [];
 
         if (!style) {
@@ -74,7 +74,7 @@ const FiveByFive = {
         // create initial floor
         blocks.push(...Structures.createFloor(xinit, yinit, xinit + xsize * cellSize, yinit + ysize * cellSize, foundationZ, style));
 
-        for(let f = 0; f < floors; f++) {
+        for(let f = initialFloor; f < floors; f++) {
             //create roof for current floor
             //This creates one giant floor for the whole area (Which we might not want?)
             if(this.ENABLE_ROOF) {
@@ -157,7 +157,7 @@ const FiveByFive = {
             }
         }
 
-        blocks.push(...this.createRoof(xinit, yinit, xinit + xsize * cellSize, yinit + ysize * cellSize, foundationZ + ((floors + 2) * cellSize), style));
+        blocks.push(...this.createRoof(xinit, yinit, xinit + xsize * cellSize, yinit + ysize * cellSize, foundationZ + ((floors + 2) * cellSize), style, "b"));
 
         //TODO If there is no atrium we can add a roof to the whole building using the roof style
 
@@ -165,7 +165,7 @@ const FiveByFive = {
     },
 
 
-    createRoof(xinit, yinit, xend, yend, z, style = Structures.STYLES.STONE) {
+    createRoof(xinit, yinit, xend, yend, z, style = Structures.STYLES.STONE, roofType = "b") {
         const blocks = [];
 
         if(!this.ENABLE_ROOF) {
@@ -187,16 +187,16 @@ const FiveByFive = {
         for(let x = 0; x < xsize; x++) {
             for(let y = 0; y < ysize; y++) {
                 if(x == 0) {
-                    blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), z, " b  ", cellSize, style));
+                    blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), z, " " + roofType + "  ", cellSize, style));
                 }
                 if(y == 0) {
-                    blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), z, "b   ", cellSize, style)); 
+                    blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), z, roofType + "   ", cellSize, style)); 
                 }
                 if(x == xsize-1) {
-                    blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), z, "   b", cellSize, style));
+                    blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), z, "   " + roofType, cellSize, style));
                 }
                 if(y == ysize-1) {
-                    blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), z, "  b ", cellSize, style));
+                    blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), z, "  " + roofType + " ", cellSize, style));
                 }
             }
         }
@@ -214,7 +214,7 @@ const FiveByFive = {
      * @param {object} style - One of Structures.STYLES
      * @returns {Array} Array of blocks
      */
-    createHouse(xinit, yinit, code = "dwww", size = 4, style = undefined) {
+    createHouse(xinit, yinit, code = "dwww", size = 5, style = undefined) {
         // Deterministic style selection if not provided
         if (!style) {
             style = this.getRandomStyle(xinit, yinit);
@@ -297,7 +297,6 @@ const FiveByFive = {
         }
         const blocks = [];
 
-
         const x1 = xinit;
         const x2 = xinit + size;
         const y1 = yinit;
@@ -311,12 +310,6 @@ const FiveByFive = {
         if(!foundationZ) {
             foundationZ = Math.max(h11,h12,h21,h22);
         }
-
-        // //Create pillars to support elevated floor
-        // blocks.push(...Structures.createPillar(x1, y1, h11, foundationZ, style.pillar));
-        // blocks.push(...Structures.createPillar(x1, y2, h12, foundationZ, style.pillar));
-        // blocks.push(...Structures.createPillar(x2, y1, h21, foundationZ, style.pillar));
-        // blocks.push(...Structures.createPillar(x2, y2, h22, foundationZ, style.pillar));
 
         // // //create floor or roof
         if(this.ENABLE_CELL_ROOF) {

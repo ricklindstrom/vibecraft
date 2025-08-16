@@ -9,6 +9,7 @@ const Structures = {
 
     STYLES : {
         WHITE:     { trim: BLOCK_TYPES.WHITE,  wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.WHITE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.BLACK, floor: BLOCK_TYPES.STONE, roofType: 'GABLE' },
+        TUDOR:     { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WHITE, roof: BLOCK_TYPES.WOOD,  window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.WOOD, floor: BLOCK_TYPES.STONE, roofType: 'GABLE' },
 
         MARBLE:     { trim: BLOCK_TYPES.STONE,  wall: BLOCK_TYPES.GLASS, roof: BLOCK_TYPES.MARBLE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.MARBLE, floor: BLOCK_TYPES.STONE, roofType: 'PYRAMID' },
         WOOD:       { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.WOOD,   floor: BLOCK_TYPES.STONE, roofType: 'GABLE' },
@@ -21,6 +22,11 @@ const Structures = {
         WOOD3:      { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.WOOD,   floor: BLOCK_TYPES.STONE, roofType: 'PYRAMID' },
         GAZEBO:      { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.AIR,   roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.AIR,   door: BLOCK_TYPES.AIR,  pillar: BLOCK_TYPES.WOOD,   floor: BLOCK_TYPES.STONE, roofType: 'FLAT' },
         GABLE_WOOD: { trim: BLOCK_TYPES.WOOD,   wall: BLOCK_TYPES.WOOD,  roof: BLOCK_TYPES.WOOD,   window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD,   floor: BLOCK_TYPES.STONE, roofType: 'GABLE' },
+        LANTERN:    { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.LANTERN, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR, pillar: BLOCK_TYPES.STONE, floor: BLOCK_TYPES.STONE, roofType: 'GABLE' },
+        TORCH:      { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.TORCH, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS,   door: BLOCK_TYPES.AIR, pillar: BLOCK_TYPES.STONE, floor: BLOCK_TYPES.STONE, roofType: 'GABLE' },
+        CRYSTAL:    { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.CRYSTAL, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR, pillar: BLOCK_TYPES.STONE, floor: BLOCK_TYPES.STONE, roofType: 'GABLE' },
+        FIREPLACE:  { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.FIREPLACE, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.AIR, pillar: BLOCK_TYPES.STONE, floor: BLOCK_TYPES.STONE, roofType: 'GABLE' },
+
         //WOOD_LEAVES: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.LEAVES, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD },
         //LEAVES_WOOD: { trim: BLOCK_TYPES.WOOD, wall: BLOCK_TYPES.WOOD, roof: BLOCK_TYPES.WOOD, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.WOOD, pillar: BLOCK_TYPES.WOOD },
         //LEAVES_STONE: { trim: BLOCK_TYPES.STONE, wall: BLOCK_TYPES.STONE, roof: BLOCK_TYPES.STONE, window: BLOCK_TYPES.GLASS, door: BLOCK_TYPES.STONE, pillar: BLOCK_TYPES.STONE },
@@ -36,6 +42,14 @@ const Structures = {
     addTerrainOverride(x1, y1, x2, y2, fixedHeight) {
         if(this.getTerrainOverride(x1, y1) === fixedHeight) return;
         
+        //If the exact same override already exists, then don't add it again
+        for(let i = 0; i < this.terrainOverrides.length; i++) {
+            const r = this.terrainOverrides[i];
+            if(r.xMin === x1 && r.xMax === x2 && r.yMin === y1 && r.yMax === y2 && r.height === fixedHeight) {
+                return;
+            }
+        }
+
         this.terrainOverrides.push({
             xMin: Math.min(x1, x2),
             xMax: Math.max(x1, x2),
@@ -112,6 +126,8 @@ const Structures = {
 
         return blocks;
     },
+
+
 
     createPillar(x, y, bottom, top, type = BLOCK_TYPES.WOOD) {
         const blocks = [];
@@ -269,66 +285,6 @@ const Structures = {
                 blocks.push({ x: startX + x, y: stopY, z: z + dz, type: style.trim });
             }
         }
-        return blocks;
-    },
-
-    createHouse(x, y, z, width, height, style = STYLES.WOOD, pattern = null) {
-        // Default pattern if none provided
-        if (!pattern) {
-            pattern = [
-                ['W', 'W', 'W', 'W', 'W'],
-                ['W', ' ', ' ', ' ', 'W'],
-                ['W', ' ', ' ', ' ', 'W'],
-                ['W', ' ', ' ', ' ', 'W'],
-                ['W', 'W', 'W', 'W', 'W']
-            ];
-        }
-        
-        const blocks = [];
-        const foundationZ = z;
-        const wallTopZ = foundationZ + this.wallHeight;
-        const roofZ = wallTopZ;
-        
-        // Create foundation
-        for (let row = 0; row < height; row++) {
-            for (let column = 0; column < width; column++) {
-                if(pattern[row][column] === 'W') {
-                    blocks.push({ x: x + column, y: y + row, z: foundationZ, type: style.trim });
-                }
-            }
-        }
-
-        // Create walls
-        for (let row = 0; row < height; row++) {
-            for (let column = 0; column < width; column++) {
-                if(pattern[row][column] === 'W') {
-                    // Check if the current cell is a corner
-                    const isCorner = (column === 0 || column === width - 1) && (row === 0 || row === height - 1);
-                    const hasWindow = (column > 0 && column < width - 1) && (row > 0 && row < height - 1);
-                    const hasDoor = (column === 0 || column === width - 1) && (row === 0 || row === height - 1);
-
-                    if(isCorner) {
-                        blocks.push({ x: x + column, y: y + row, z: wallTopZ, type: style.trim });
-                    } else if(hasWindow) {
-                        blocks.push({ x: x + column, y: y + row, z: wallTopZ, type: style.window });
-                    } else if(hasDoor) {
-                        blocks.push({ x: x + column, y: y + row, z: wallTopZ, type: style.door });
-                    } else {
-                        blocks.push({ x: x + column, y: y + row, z: wallTopZ, type: style.wall });
-                    }
-                }
-            }
-        }
-
-        // Create roof
-        for (let row = 0; row < height; row++) {
-            for (let column = 0; column < width; column++) {
-                if(pattern[row][column] === 'W') {
-                    blocks.push({ x: x + column, y: y + row, z: roofZ, type: style.roof });
-                }
-            }
-        }
-
         return blocks;
     }
 
