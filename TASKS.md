@@ -32,10 +32,9 @@
  - [ ] TERRAIN CALC: Add proper smoothing to spline function.
  - [ ] STRUCTURES: Add castles.
  - [ ] STRUCTURES: Add roads.
- - [ ] STRUCTURES: Create advanced house building system (L-System)?
  - [ ] TERRAIN CALC + STRUCTURES: Add terrain rating score for home building to identify good locations for building houses/castles. (Flat near water? Tops of hills?)
  - [ ] POLISH: Add cloud layer
  - [ ] POLISH: Rotate minimap to align with direction of player.
  - [ ] TERRAIN CALC: Improve perlin noise function to make more natural terrain.
- 
-- [ ] STRUCTURES - Create 5x5 building system
+- [x] STRUCTURES: Create 5x5 building system
+- [x] STRUCTURES: Create more advanced house building system

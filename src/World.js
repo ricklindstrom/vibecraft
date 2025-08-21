@@ -565,16 +565,17 @@ class World {
         const centerX = chunkX * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
         const centerY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
         if(FiveByFive.isBuildable(chunkX, chunkY, centerX, centerY)) {
-            if(this.random(centerX, centerY) > 0.66) {
-                let houseBlocks = FiveByFive.createHouse(centerX, centerY);
-                this.generateBlocks(houseBlocks, chunkGroup);
+            let houseBlocks = [];
+            if(this.random(centerX, centerY) > 0.8) {
+                 houseBlocks = FiveByFive.createHouseFromLayout(centerX, centerY);
+            } else if(this.random(centerX, centerY) > 0.66) {
+                houseBlocks = FiveByFive.createHouse(centerX, centerY);
             } else if(this.random(centerX, centerY) > 0.33) {
-                let houseBlocks = FiveByFive.createBuilding(centerX, centerY, 8, 8, 8);
-                this.generateBlocks(houseBlocks, chunkGroup);
+                houseBlocks = FiveByFive.createBuilding(centerX, centerY, 8, 8, 5);
             } else {
-                let houseBlocks = Houses.createHouse(centerX, centerY);
-                this.generateBlocks(houseBlocks, chunkGroup);
+                houseBlocks = Houses.createHouse(centerX, centerY);
             }
+            this.generateBlocks(houseBlocks, chunkGroup);
         }
 
         chunkTrees = this.generateTreePositionsForChunk(chunkX, chunkY, lodLevel);

@@ -30,6 +30,7 @@ const FiveByFive = {
         const diff = highest - lowest;
         if(diff > 7 || lowest < 0) return false;
 
+        // Build all over the place for now to debug building generation
         return true;
         // return this.random(chunkX, chunkY) > 0.5 && this.random(chunkY, chunkX) > 0.5;
     },
@@ -204,6 +205,41 @@ const FiveByFive = {
         return blocks;
     },
 
+    SAMPLE_HOUSE_LAYOUT : [[['dW++','w++w'],['+ww+','++ww']], [['ww++','w++w'],['+ww+','++ww']]],
+    //SAMPLE_HOUSE_LAYOUT : [[['dWww']]],
+
+    createHouseFromLayout(xinit, yinit, layout=this.SAMPLE_HOUSE_LAYOUT, style=Structures.STYLES.TUDOR) {
+        const blocks = [];
+        
+        //FIXME
+        const h11 = TerrainGenerator.getTerrainHeight(xinit, yinit);
+        const h12 = TerrainGenerator.getTerrainHeight(xinit, yinit);
+        const h21 = TerrainGenerator.getTerrainHeight(xinit, yinit);
+        const h22 = TerrainGenerator.getTerrainHeight(xinit, yinit);
+
+        const foundationZ = Math.max(h11,h12,h21,h22);
+
+
+        // Loop through floors (Z dimension)
+        for(let floor = 0; floor < layout.length; floor++) {
+            const floorLayout = layout[floor];
+            const floorZ = foundationZ + (floor * 4);
+            
+            // Loop through X and Y positions within each floor
+            for(let y = 0; y < floorLayout.length; y++) {
+                for(let x = 0; x < floorLayout[y].length; x++) {
+                    const houseCode = floorLayout[y][x];
+                    const houseX = xinit + (x * 4);
+                    const houseY = yinit + (y * 4);
+                    
+                    // Create house for this position on this floor
+                    blocks.push(...this.createCell(houseX, houseY, floorZ, houseCode, 5, style));
+                }
+            }
+        }
+        
+        return blocks;
+    },
 
     /**
      * Create a house structure at the given center position, with optional size and style.
@@ -214,7 +250,7 @@ const FiveByFive = {
      * @param {object} style - One of Structures.STYLES
      * @returns {Array} Array of blocks
      */
-    createHouse(xinit, yinit, code = "dwww", size = 5, style = undefined) {
+    createHouse(xinit, yinit, code = "dwww", size = 5, style = undefined, floorZ = 0) {
         // Deterministic style selection if not provided
         if (!style) {
             style = this.getRandomStyle(xinit, yinit);
@@ -234,7 +270,7 @@ const FiveByFive = {
         const h21 = TerrainGenerator.getTerrainHeight(x2, y1);
         const h22 = TerrainGenerator.getTerrainHeight(x2, y2);
 
-        const foundationZ = Math.max(h11,h12,h21,h22);
+        const foundationZ = Math.max(h11,h12,h21,h22) + floorZ;
 
         //Create pillars to support elevated floor
         blocks.push(...Structures.createPillar(x1, y1, h11, foundationZ, style.pillar));
@@ -257,7 +293,7 @@ const FiveByFive = {
                 blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + size - 1, style.pillar));
             }
             if(["W", "w", "D", "d", "+"].includes(code[3])) {
-            blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + size - 1, style.pillar));
+                blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + size - 1, style.pillar));
             }
         }
 
@@ -266,19 +302,19 @@ const FiveByFive = {
          }
 
         //Walls
-        if(["W", "w", "D", "d"].includes(code[0])) {
+        if(["W", "w", "D", "d", "A", "+"].includes(code[0])) {
             blocks.push(...Structures.createXWall(x1 + 1, x2 - 1, y1, foundationZ, code[0] == 'w', code[0] == 'd', style));
         }
 
-        if(["W", "w", "D", "d"].includes(code[1])) {
+        if(["W", "w", "D", "d", "A", "+"].includes(code[1])) {
             blocks.push(...Structures.createYWall(y1 + 1, y2 - 1, x1, foundationZ, code[1] == 'w', code[1] == 'd', style));
         }
 
-        if(["W", "w", "D", "d"].includes(code[2])) {
+        if(["W", "w", "D", "d", "A", "+"].includes(code[2])) {
             blocks.push(...Structures.createXWall(x1 + 1, x2 - 1, y2, foundationZ, code[2] == 'w', code[2] == 'd', style));
         }
 
-        if(["W", "w", "D", "d"].includes(code[3])) {
+        if(["W", "w", "D", "d", "A", "+"].includes(code[3])) {
             blocks.push(...Structures.createYWall(y1 + 1, y2 - 1, x2, foundationZ, code[3] == 'w', code[3] == 'd', style));
         }
 
@@ -286,7 +322,7 @@ const FiveByFive = {
         return blocks;
     },
 
-    createCell(xinit, yinit, foundationZ = undefined, code = "wwww", size = 4, style = undefined) {
+    createCell(xinit, yinit, foundationZ = undefined, code = "wwww", size = 5 - 2, style = undefined) {
 
         if (!style) {
             // Deterministic style selection if not provided
@@ -298,22 +334,21 @@ const FiveByFive = {
         const blocks = [];
 
         const x1 = xinit;
-        const x2 = xinit + size;
+        const x2 = xinit + size - 1;
         const y1 = yinit;
-        const y2 = yinit + size;
-
-        const h11 = TerrainGenerator.getTerrainHeight(x1, y1);
-        const h12 = TerrainGenerator.getTerrainHeight(x1, y2);
-        const h21 = TerrainGenerator.getTerrainHeight(x2, y1);
-        const h22 = TerrainGenerator.getTerrainHeight(x2, y2);
+        const y2 = yinit + size - 1;
 
         if(!foundationZ) {
+            const h11 = TerrainGenerator.getTerrainHeight(x1, y1);
+            const h12 = TerrainGenerator.getTerrainHeight(x1, y2);
+            const h21 = TerrainGenerator.getTerrainHeight(x2, y1);
+            const h22 = TerrainGenerator.getTerrainHeight(x2, y2);
             foundationZ = Math.max(h11,h12,h21,h22);
         }
 
-        // // //create floor or roof
+        //create roof of current cell
         if(this.ENABLE_CELL_ROOF) {
-            blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + size, style));
+            blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + size - 1, style));
         }
 
         //Grid
@@ -328,38 +363,24 @@ const FiveByFive = {
                 blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + size - 1, style.trim));
             }
             if(["W", "w", "D", "d", "A", "+"].includes(code[3])) {
-            blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + size - 1, style.trim));
+                blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + size - 1, style.trim));
             }
         }
 
     if(this.ENABLE_WALLS) {
-            //create walls
-            if(["W", "w", "D", "d"].includes(code[0])) {
-                blocks.push(...this.createXWall(x1 + 1, x2 - 1, y1, foundationZ, code[0], style));
-            }
-            if(["W", "w", "D", "d"].includes(code[1])) {
-                blocks.push(...this.createYWall(y1 + 1, y2 - 1, x1, foundationZ, code[1], style));
-            }
-            if(["W", "w", "D", "d"].includes(code[2])) {
-                blocks.push(...this.createXWall(x1 + 1, x2 - 1, y2, foundationZ, code[2], style));
-            }
-            if(["W", "w", "D", "d"].includes(code[3])) {
-                blocks.push(...this.createYWall(y1 + 1, y2 - 1, x2, foundationZ, code[3], style));
-            }
 
-            //create walls
-            if(["A"].includes(code[0])) {
-                blocks.push(...this.createXWall(x1 + 1, x2 - 1, y1, foundationZ, code[0], style));
-            }
-            if(["A"].includes(code[1])) {
-                blocks.push(...this.createYWall(y1 + 1, y2 - 1, x1, foundationZ, code[1], style));
-            }
-            if(["A"].includes(code[2])) {
-                blocks.push(...this.createXWall(x1 + 1, x2 - 1, y2, foundationZ, code[2], style));
-            }
-            if(["A"].includes(code[3])) {
-                blocks.push(...this.createYWall(y1 + 1, y2 - 1, x2, foundationZ, code[3], style));
-            }
+        if(["W", "w", "D", "d", "A"].includes(code[0])) {
+            blocks.push(...this.createXWall(x1 + 1, x2 - 1, y1, foundationZ, code[0], style));
+        }
+        if(["W", "w", "D", "d", "A"].includes(code[1])) {
+            blocks.push(...this.createYWall(y1 + 1, y2 - 1, x1, foundationZ, code[1], style));
+        }
+        if(["W", "w", "D", "d", "A"].includes(code[2])) {
+            blocks.push(...this.createXWall(x1 + 1, x2 - 1, y2, foundationZ, code[2], style));
+        }
+        if(["W", "w", "D", "d", "A"].includes(code[3])) {
+            blocks.push(...this.createYWall(y1 + 1, y2 - 1, x2, foundationZ, code[3], style));
+        }
     }
 
     if(this.ENABLE_CELL_ROOF) {
