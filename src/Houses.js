@@ -92,20 +92,36 @@ const Houses = {
         blocks.push(...Structures.createYWall(y1, y2, x2, foundationZ, true, false, style));
 
         //create roof
+        blocks.push(...this.createRoof(x1, y1, x2, y2, foundationZ, style));
+        return blocks;
+    },
+
+    /**
+     * Create a roof based on the style's roof type
+     * @param {number} x1 - Left boundary
+     * @param {number} y1 - Bottom boundary  
+     * @param {number} x2 - Right boundary
+     * @param {number} y2 - Top boundary
+     * @param {number} z - Base Z coordinate
+     * @param {object} style - House style object
+     * @returns {Array} Array of roof blocks
+     */
+    createRoof(x1, y1, x2, y2, z, style) {
         if(style.roofType === 'PYRAMID') {
-            blocks.push(...Structures.createPyramidRoof(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style));
+            return Structures.createPyramidRoof(x1, y1, x2, y2, z + Structures.wallHeight + 1, style);
         } else if(style.roofType === 'FLAT') {
-            blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style));
+            return Structures.createFloor(x1, y1, x2, y2, z + Structures.wallHeight + 1, style);
         } else if(style.roofType === 'STORY') {
             // THIS ISN'T RIGHT YET
-            //blocks.push(...Structures.createHouse(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style));
+            //return Structures.createHouse(x1, y1, x2, y2, z + Structures.wallHeight + 1, style);
+            return [];
         } else if(style.roofType === 'GABLE') {
             // Add support for GABLE roof
-            blocks.push(...Structures.createGableRoof(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style));
+            return Structures.createGableRoof(x1, y1, x2, y2, z + Structures.wallHeight + 1, style);
         } else if(style.roofType === 'BATTLEMENT') {
-            blocks.push(...FiveByFive.createRoof(x1, y1, x2, y2, foundationZ + Structures.wallHeight + 1, style));
+            return FiveByFive.createRoof(x1, y1, x2, y2, z + Structures.wallHeight + 1, style);
         }
-        return blocks;
+        return [];
     },
 
 

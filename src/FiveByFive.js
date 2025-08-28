@@ -1,3 +1,15 @@
+// Cube type constants for building layouts
+const CUBE_TYPES = {
+    SE_CORNER : 'dw  ',
+    SOUTH: 'w   ',
+    SW_CORNER : 'w+w+',
+    WEST: '++ww',
+    NW_CORNER : '++dw',
+    NORTH: 'w+w+',
+    NE_CORNER : 'w+dw',
+    EAST: '++ww',
+};
+
 const FiveByFive = {
 
     //variable to control the size of the building cells
@@ -201,16 +213,39 @@ const FiveByFive = {
                 }
             }
         }
-
         return blocks;
     },
 
-    SAMPLE_HOUSE_LAYOUT : [[['dW++','w++w'],['+ww+','++ww']], [['ww++','w++w'],['+ww+','++ww']]],
-    //SAMPLE_HOUSE_LAYOUT : [[['dWww']]],
+    BUILDINGS : {
+        TWO_BY_TWO_BY_TWO_LAYOUT : [[['dW++','w++w'],['+ww+','++ww']], [['ww++','w++w'],['+ww+','++ww']]],
+        TOWER_LAYOUT : [[['WWWW']],[['WWWW']],[['WWWW']], [['DDDD']], [['DDDD']], [['DDDD']], [['++++']]],
+        BIG_TOWER_LAYOUT : [[['WW++','W++W'],['+WW+','++WW']],
+                            [['WW++','W++W'],['+WW+','++WW']],
+                            [['WW++','W++W'],['+WW+','++WW']],
+                            [['WW++','W++W'],['+WW+','++WW']],
+                            [['++++','++++'],['++++','++++']]],
+        THREE_BY_THREE_BY_THREE_LAYOUT : [
+            [[CUBE_TYPES.SE_CORNER,CUBE_TYPES.SOUTH,'w++w'],['+w+ ','    ','+ +w'],['+ww+',' +w+','++ww']],
+            [['ww++','w+ +','w++w'],['+w+ ','    ','+ +w'],['+ww+',' +w+','++ww']],
+            [['ww++','w+ +','w++w'],['+w+ ','    ','+ +w'],['+ww+',' +w+','++ww']]],
+        COTTAGE_LAYOUT : [[['dW++','w++w'],['+ww+','++ww']], [['wwA+','w+Aw']]],
 
-    createHouseFromLayout(xinit, yinit, layout=this.SAMPLE_HOUSE_LAYOUT, style=Structures.STYLES.TUDOR) {
+    },    
+
+    getRandomBuildingLayout(x, y) {
+        const layoutKeys = Object.keys(this.BUILDINGS);        
+        const hash = Math.abs((x * 11 + y * 13));
+        const index = hash % layoutKeys.length;
+        return this.BUILDINGS[layoutKeys[index]];
+    },
+
+    createHouseFromLayout(xinit, yinit, layout, style=Structures.STYLES.TUDOR) {
         const blocks = [];
         
+        if(!layout) {
+            layout = this.getRandomBuildingLayout(xinit, yinit);
+        }
+
         //FIXME
         const h11 = TerrainGenerator.getTerrainHeight(xinit, yinit);
         const h12 = TerrainGenerator.getTerrainHeight(xinit, yinit);
@@ -218,6 +253,8 @@ const FiveByFive = {
         const h22 = TerrainGenerator.getTerrainHeight(xinit, yinit);
 
         const foundationZ = Math.max(h11,h12,h21,h22);
+
+        // TODO: Create the foundation floor
 
 
         // Loop through floors (Z dimension)
@@ -238,6 +275,9 @@ const FiveByFive = {
             }
         }
         
+        //TODO: Create the roof
+        blocks.push(...this.createRoof(xinit, yinit, xinit + layout.length * 4, yinit + layout[0].length * 4, foundationZ + ((layout.length + 2) * 4), style, "b"));
+
         return blocks;
     },
 
@@ -353,32 +393,32 @@ const FiveByFive = {
 
         //Grid
         if(this.ENABLE_GRID) {
-            if(["W", "w", "D", "d", "A", "+"].includes(code[0])) {
+            if(["W", "w", "D", "d", "A", "+", "F", "f"].includes(code[0])) {
                 blocks.push(...Structures.createPillar(x1, y1, foundationZ, foundationZ + size - 1, style.trim));
             }
-            if(["W", "w", "D", "d", "A", "+"].includes(code[1])) {
+            if(["W", "w", "D", "d", "A", "+", "F", "f"].includes(code[1])) {
                 blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + size - 1, style.trim));
             }   
-            if(["W", "w", "D", "d", "A", "+"].includes(code[2])) {    
+            if(["W", "w", "D", "d", "A", "+", "F", "f"].includes(code[2])) {    
                 blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + size - 1, style.trim));
             }
-            if(["W", "w", "D", "d", "A", "+"].includes(code[3])) {
+            if(["W", "w", "D", "d", "A", "+", "F", "f"].includes(code[3])) {
                 blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + size - 1, style.trim));
             }
         }
 
     if(this.ENABLE_WALLS) {
 
-        if(["W", "w", "D", "d", "A"].includes(code[0])) {
+        if(!["+", " "].includes(code[0])) {
             blocks.push(...this.createXWall(x1 + 1, x2 - 1, y1, foundationZ, code[0], style));
         }
-        if(["W", "w", "D", "d", "A"].includes(code[1])) {
+        if(!["+", " "].includes(code[1])) {
             blocks.push(...this.createYWall(y1 + 1, y2 - 1, x1, foundationZ, code[1], style));
         }
-        if(["W", "w", "D", "d", "A"].includes(code[2])) {
+        if(!["+", " "].includes(code[2])) {
             blocks.push(...this.createXWall(x1 + 1, x2 - 1, y2, foundationZ, code[2], style));
         }
-        if(["W", "w", "D", "d", "A"].includes(code[3])) {
+        if(!["+", " "].includes(code[3])) {
             blocks.push(...this.createYWall(y1 + 1, y2 - 1, x2, foundationZ, code[3], style));
         }
     }
@@ -459,9 +499,12 @@ const FiveByFive = {
     getPanelPattern(panelType="W") {
         if(panelType === "W") { return ["WWW", "WWW", "WWW"]; } // Wall
         if(panelType === "w") { return ["WWW", "W W", "WWW"]; } // Wall with window
-        if(panelType === "D") { return ["W W", "W W", "WWW"]; } // Door
+        if(panelType === "D") { return ["W W", "W W", "W W"]; } // Tall door
         if(panelType === "d") { return ["W W", "W W", "WWW"]; } // Door
         if(panelType === "A") { return ["   ", "   ", "W W"]; } // Arch
+        if(panelType === "F") { return ["WWW", "WWW", "   "]; } // High fence
+        if(panelType === "f") { return ["WWW", "   ", "   "]; } // Low fence
+        if(panelType === "-") { return ["WWW", "   ", "WWW"]; } // Wide window
         if(panelType === "b") { return [" W ", "   ", "   "]; } // Battlements (not really useful yet)
         if(panelType === "B") { return ["WWW", " W ", "   "]; } // Higher battlement (not really useful yet)
         console.log("Unknown panel type: " + panelType);
