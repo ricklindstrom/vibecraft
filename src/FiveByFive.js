@@ -1,22 +1,42 @@
 // Cube type constants for building layouts
-const CUBE_TYPES = {
-    SE_CORNER : 'dw  ',
-    SOUTH: 'w   ',
-    SW_CORNER : 'w+w+',
-    WEST: '++ww',
-    NW_CORNER : '++dw',
-    NORTH: 'w+w+',
-    NE_CORNER : 'w+dw',
-    EAST: '++ww',
+const CUBES = { //SENW
+    SE_CORNER : 'ww  ',
+    SE_CORNER_DOOR : 'dw  ',
+    SOUTH: 'w + ',
+    SW_CORNER : 'w++w',
+    WEST: '  +w',
+    NW_CORNER : '++ww',
+    NORTH: ' +w+',
+    NE_CORNER : '+ww+',
+    EAST: '+w  ',
+    EMPTY: '    ',
+    GRID: '++++',
 };
 
 const FiveByFive = {
+
+    BUILDINGS : {
+        TWO_BY_TWO_BY_TWO_LAYOUT : [[[CUBES.SE_CORNER_DOOR,CUBES.SW_CORNER],[CUBES.NE_CORNER,CUBES.NW_CORNER]], [['ww++','w++w'],['+ww+','++ww']]],
+        TOWER_LAYOUT : [[['WWWW']],[['WWWW']],[['WWWW']], [['DDDD']], [['DDDD']], [['DDDD']], [['++++']]],
+        BIG_TOWER_LAYOUT : [[['WW++','W++W'],['+WW+','++WW']],
+                            [['WW++','W++W'],['+WW+','++WW']],
+                            [['WW++','W++W'],['+WW+','++WW']],
+                            [['WW++','W++W'],['+WW+','++WW']],
+                            [['++++','++++'],['++++','++++']]],
+        THREE_BY_THREE_BY_THREE_LAYOUT : [
+            [[CUBES.SE_CORNER_DOOR,CUBES.SOUTH,CUBES.SW_CORNER],[CUBES.EAST,'    ',CUBES.WEST],[CUBES.NE_CORNER,CUBES.NORTH,CUBES.NW_CORNER]],
+            [[CUBES.SE_CORNER     ,CUBES.SOUTH,CUBES.SW_CORNER],[CUBES.EAST,'    ',CUBES.WEST],[CUBES.NE_CORNER,CUBES.NORTH,CUBES.NW_CORNER]],
+            [[CUBES.SE_CORNER     ,CUBES.SOUTH,CUBES.SW_CORNER],[CUBES.EAST,'    ',CUBES.WEST],[CUBES.NE_CORNER,CUBES.NORTH,CUBES.NW_CORNER]]],
+        COTTAGE_LAYOUT : [[[CUBES.SE_CORNER_DOOR,CUBES.SW_CORNER],[CUBES.NE_CORNER,CUBES.NW_CORNER]], [['ww-+','w+-w']]],
+
+    },
 
     //variable to control the size of the building cells
     ENABLE_WALLS : true,
     ENABLE_GRID : true,
     ENABLE_ROOF : false,
     ENABLE_CELL_ROOF : true,
+    ENABLE_CELL_FLOOR : true,
 
     // Better mathmatical modulo that works for negative numbers
     mod(x, n) {
@@ -54,7 +74,6 @@ const FiveByFive = {
 
     getRandomStyle(x, y) {
         const styleKeys = Object.keys(Structures.STYLES);
-        //const hash = Math.abs(Math.floor(((x * 73856093) ^ (y * 19349663)) % 4294967296)) % styleKeys.length;
         const hash = Math.abs(((x * 73856093) ^ (y * 19349663))) % styleKeys.length;
         return Structures.STYLES[styleKeys[hash]];
     }, 
@@ -177,6 +196,74 @@ const FiveByFive = {
         return blocks;
     },
 
+    createBuilding2(xinit, yinit, xcells = 1, ycells = 1, floors = 1, style = undefined, initialFloor = 0) {
+        const blocks = [];
+
+        if (!style) {
+            style = this.getRandomStyle(xinit, yinit);
+            if(!style) {
+                return [];
+            }
+        }
+        let cellSize = 4;
+
+       
+        //Get the highest point of the terrain around the building
+        const h11 = TerrainGenerator.getTerrainHeight(xinit, yinit);
+        const h12 = TerrainGenerator.getTerrainHeight(xinit, yinit + ycells * cellSize);
+        const h21 = TerrainGenerator.getTerrainHeight(xinit + xcells * cellSize, yinit);
+        const h22 = TerrainGenerator.getTerrainHeight(xinit + xcells * cellSize, yinit + ycells * cellSize);
+        let foundationZ = Math.max(h11,h12,h21,h22) + 1;
+
+        // create pillars to support elevated floor
+        blocks.push(...Structures.createPillar(xinit, yinit, h11, foundationZ, style.pillar));
+        blocks.push(...Structures.createPillar(xinit, yinit + ycells * cellSize, h12, foundationZ, style.pillar));
+        blocks.push(...Structures.createPillar(xinit + xcells * cellSize, yinit, h21, foundationZ, style.pillar));
+        blocks.push(...Structures.createPillar(xinit + xcells * cellSize, yinit + ycells * cellSize, h22, foundationZ, style.pillar));
+
+        // create initial floor
+        blocks.push(...Structures.createFloor(xinit, yinit, xinit + xcells * cellSize, yinit + ycells * cellSize, foundationZ, style));
+
+        for(let f = initialFloor; f < floors; f++) {
+            //create roof for current floor
+            //This creates one giant floor for the whole area (Which we might not want?)
+            if(this.ENABLE_ROOF) {
+                blocks.push(...Structures.createFloor(xinit, yinit, xinit + xcells * cellSize, yinit + ycells * cellSize, foundationZ + ((f + 1) * cellSize), style));
+            }
+
+            for(let x = 0; x < xcells; x++) {
+                for(let y = 0; y < ycells; y++) {
+
+                    let xdist = Math.min(x, xsize - x - 1);
+                    let ydist = Math.min(y, ysize - y - 1);
+ 
+                    if(x== 0 && y == 0 && f==0) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "dw++", cellSize, style));
+                        continue
+                    }
+                    if(x == 0) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "+w+ ", cellSize, style));
+                    }
+                    if(y == 0) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "w+ +", cellSize, style));
+                    }
+                    if(x == xcells-1) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "+ +w", cellSize, style));
+                    }
+                    if(y == ycells-1) {
+                        blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), " +w+", cellSize, style));
+                    }
+                    
+                }
+            }
+        }
+
+        //blocks.push(...this.createRoof(xinit, yinit, xinit + xsize * cellSize, yinit + ysize * cellSize, foundationZ + ((floors + 2) * cellSize), style, "b"));
+
+        //TODO If there is no atrium we can add a roof to the whole building using the roof style
+
+        return blocks;
+    },
 
     createRoof(xinit, yinit, xend, yend, z, style = Structures.STYLES.STONE, roofType = "b") {
         const blocks = [];
@@ -215,23 +302,7 @@ const FiveByFive = {
         }
         return blocks;
     },
-
-    BUILDINGS : {
-        TWO_BY_TWO_BY_TWO_LAYOUT : [[['dW++','w++w'],['+ww+','++ww']], [['ww++','w++w'],['+ww+','++ww']]],
-        TOWER_LAYOUT : [[['WWWW']],[['WWWW']],[['WWWW']], [['DDDD']], [['DDDD']], [['DDDD']], [['++++']]],
-        BIG_TOWER_LAYOUT : [[['WW++','W++W'],['+WW+','++WW']],
-                            [['WW++','W++W'],['+WW+','++WW']],
-                            [['WW++','W++W'],['+WW+','++WW']],
-                            [['WW++','W++W'],['+WW+','++WW']],
-                            [['++++','++++'],['++++','++++']]],
-        THREE_BY_THREE_BY_THREE_LAYOUT : [
-            [[CUBE_TYPES.SE_CORNER,CUBE_TYPES.SOUTH,'w++w'],['+w+ ','    ','+ +w'],['+ww+',' +w+','++ww']],
-            [['ww++','w+ +','w++w'],['+w+ ','    ','+ +w'],['+ww+',' +w+','++ww']],
-            [['ww++','w+ +','w++w'],['+w+ ','    ','+ +w'],['+ww+',' +w+','++ww']]],
-        COTTAGE_LAYOUT : [[['dW++','w++w'],['+ww+','++ww']], [['wwA+','w+Aw']]],
-
-    },    
-
+ 
     getRandomBuildingLayout(x, y) {
         const layoutKeys = Object.keys(this.BUILDINGS);        
         const hash = Math.abs((x * 11 + y * 13));
@@ -386,6 +457,11 @@ const FiveByFive = {
             foundationZ = Math.max(h11,h12,h21,h22);
         }
 
+        //create floor of current cell
+        if(this.ENABLE_CELL_FLOOR) {
+            blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ, style));
+        }
+
         //create roof of current cell
         if(this.ENABLE_CELL_ROOF) {
             blocks.push(...Structures.createFloor(x1, y1, x2, y2, foundationZ + size - 1, style));
@@ -393,59 +469,58 @@ const FiveByFive = {
 
         //Grid
         if(this.ENABLE_GRID) {
-            if(["W", "w", "D", "d", "A", "+", "F", "f"].includes(code[0])) {
+            if(![" "].includes(code[0])) {
                 blocks.push(...Structures.createPillar(x1, y1, foundationZ, foundationZ + size - 1, style.trim));
             }
-            if(["W", "w", "D", "d", "A", "+", "F", "f"].includes(code[1])) {
+            if(![" "].includes(code[1])) {
                 blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + size - 1, style.trim));
             }   
-            if(["W", "w", "D", "d", "A", "+", "F", "f"].includes(code[2])) {    
+            if(![" "].includes(code[2])) {
                 blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + size - 1, style.trim));
             }
-            if(["W", "w", "D", "d", "A", "+", "F", "f"].includes(code[3])) {
+            if(![" "].includes(code[3])) {
                 blocks.push(...Structures.createPillar(x1, y2, foundationZ, foundationZ + size - 1, style.trim));
             }
         }
 
-    if(this.ENABLE_WALLS) {
+        if(this.ENABLE_WALLS) {
+            if(!["+", " "].includes(code[0])) {
+                blocks.push(...this.createXWall(x1 + 1, x2 - 1, y1, foundationZ, code[0], style));
+            }
+            if(!["+", " "].includes(code[1])) {
+                blocks.push(...this.createYWall(y1 + 1, y2 - 1, x1, foundationZ, code[1], style));
+            }
+            if(!["+", " "].includes(code[2])) {
+                blocks.push(...this.createXWall(x1 + 1, x2 - 1, y2, foundationZ, code[2], style));
+            }
+            if(!["+", " "].includes(code[3])) {
+                blocks.push(...this.createYWall(y1 + 1, y2 - 1, x2, foundationZ, code[3], style));
+            }
+        }
 
-        if(!["+", " "].includes(code[0])) {
-            blocks.push(...this.createXWall(x1 + 1, x2 - 1, y1, foundationZ, code[0], style));
+        if(this.ENABLE_CELL_ROOF) {
+            let z = foundationZ + size + 1;
+            if(["b"].includes(code[0])) {
+                blocks.push({ x: x1, y: y1, z: z, type: style.wall });
+                blocks.push({ x: x1 + 2, y: y1, z: z, type: style.wall });
+                blocks.push({ x: x1 + 4, y: y1, z: z, type: style.wall });
+            }
+            if(["b"].includes(code[1])) {
+                blocks.push({ x: x1, y: y1, z: z, type: style.wall });
+                blocks.push({ x: x1, y: y1 + 2, z: z, type: style.wall });
+                blocks.push({ x: x1, y: y1 + 4, z: z, type: style.wall });
+            }
+            if(["b"].includes(code[2])) {
+                blocks.push({ x: x1, y: y2, z: z, type: style.wall });
+                blocks.push({ x: x1 + 2, y: y2, z: z, type: style.wall });
+                blocks.push({ x: x1 + 4, y: y2, z: z, type: style.wall });
+            }
+            if(["b"].includes(code[3])) {
+                blocks.push({ x: x2, y: y1, z: z, type: style.wall });
+                blocks.push({ x: x2, y: y1 + 2, z: z, type: style.wall });
+                blocks.push({ x: x2, y: y1 + 4, z: z, type: style.wall });
+            }
         }
-        if(!["+", " "].includes(code[1])) {
-            blocks.push(...this.createYWall(y1 + 1, y2 - 1, x1, foundationZ, code[1], style));
-        }
-        if(!["+", " "].includes(code[2])) {
-            blocks.push(...this.createXWall(x1 + 1, x2 - 1, y2, foundationZ, code[2], style));
-        }
-        if(!["+", " "].includes(code[3])) {
-            blocks.push(...this.createYWall(y1 + 1, y2 - 1, x2, foundationZ, code[3], style));
-        }
-    }
-
-    if(this.ENABLE_CELL_ROOF) {
-        let z = foundationZ + size + 1;
-        if(["b"].includes(code[0])) {
-            blocks.push({ x: x1, y: y1, z: z, type: style.wall });
-            blocks.push({ x: x1 + 2, y: y1, z: z, type: style.wall });
-            blocks.push({ x: x1 + 4, y: y1, z: z, type: style.wall });
-        }
-        if(["b"].includes(code[1])) {
-            blocks.push({ x: x1, y: y1, z: z, type: style.wall });
-            blocks.push({ x: x1, y: y1 + 2, z: z, type: style.wall });
-            blocks.push({ x: x1, y: y1 + 4, z: z, type: style.wall });
-        }
-        if(["b"].includes(code[2])) {
-            blocks.push({ x: x1, y: y2, z: z, type: style.wall });
-            blocks.push({ x: x1 + 2, y: y2, z: z, type: style.wall });
-            blocks.push({ x: x1 + 4, y: y2, z: z, type: style.wall });
-        }
-        if(["b"].includes(code[3])) {
-            blocks.push({ x: x2, y: y1, z: z, type: style.wall });
-            blocks.push({ x: x2, y: y1 + 2, z: z, type: style.wall });
-            blocks.push({ x: x2, y: y1 + 4, z: z, type: style.wall });
-        }
-    }
 
         return blocks;
     },
