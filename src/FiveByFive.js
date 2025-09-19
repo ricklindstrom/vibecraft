@@ -1,3 +1,5 @@
+
+
 // Cube type constants for building layouts
 const CUBES = { //SENW
     SE_CORNER : 'ww  ',
@@ -16,18 +18,23 @@ const CUBES = { //SENW
 const FiveByFive = {
 
     BUILDINGS : {
-        TWO_BY_TWO_BY_TWO_LAYOUT : [[[CUBES.SE_CORNER_DOOR,CUBES.SW_CORNER],[CUBES.NE_CORNER,CUBES.NW_CORNER]], [['ww++','w++w'],['+ww+','++ww']]],
-        TOWER_LAYOUT : [[['WWWW']],[['WWWW']],[['WWWW']], [['DDDD']], [['DDDD']], [['DDDD']], [['++++']]],
-        BIG_TOWER_LAYOUT : [[['WW++','W++W'],['+WW+','++WW']],
-                            [['WW++','W++W'],['+WW+','++WW']],
-                            [['WW++','W++W'],['+WW+','++WW']],
-                            [['WW++','W++W'],['+WW+','++WW']],
-                            [['++++','++++'],['++++','++++']]],
-        THREE_BY_THREE_BY_THREE_LAYOUT : [
-            [[CUBES.SE_CORNER_DOOR,CUBES.SOUTH,CUBES.SW_CORNER],[CUBES.EAST,'    ',CUBES.WEST],[CUBES.NE_CORNER,CUBES.NORTH,CUBES.NW_CORNER]],
-            [[CUBES.SE_CORNER     ,CUBES.SOUTH,CUBES.SW_CORNER],[CUBES.EAST,'    ',CUBES.WEST],[CUBES.NE_CORNER,CUBES.NORTH,CUBES.NW_CORNER]],
-            [[CUBES.SE_CORNER     ,CUBES.SOUTH,CUBES.SW_CORNER],[CUBES.EAST,'    ',CUBES.WEST],[CUBES.NE_CORNER,CUBES.NORTH,CUBES.NW_CORNER]]],
+        TWO_BY_TWO_BLUEPRINT_LAYOUT : Blueprint.createBuildingFromBlueprint(Blueprint.BLUEPRINTS.TWO_BY_TWO),
+        THREE_BY_THREE_BLUEPRINT_LAYOUT : Blueprint.createBuildingFromBlueprint(Blueprint.BLUEPRINTS.THREE_BY_THREE),
+        TOWER_BLUEPRINT_LAYOUT : Blueprint.createBuildingFromBlueprint(Blueprint.BLUEPRINTS.TOWER),
+         //TWO_BY_TWO_BY_TWO_LAYOUT : [[[CUBES.SE_CORNER_DOOR,CUBES.SW_CORNER],[CUBES.NE_CORNER,CUBES.NW_CORNER]], [['ww++','w++w'],['+ww+','++ww']]],
+        // TOWER_LAYOUT : [[['WWWW']],[['WWWW']],[['WWWW']], [['DDDD']], [['DDDD']], [['DDDD']], [['++++']]],
+        // BIG_TOWER_LAYOUT : [[['WW++','W++W'],['+WW+','++WW']],
+        //                     [['WW++','W++W'],['+WW+','++WW']],
+        //                     [['WW++','W++W'],['+WW+','++WW']],
+        //                     [['WW++','W++W'],['+WW+','++WW']],
+        //                     [['++++','++++'],['++++','++++']]],
+        // THREE_BY_THREE_BY_THREE_LAYOUT : [
+        //     [[CUBES.SE_CORNER_DOOR,CUBES.SOUTH,CUBES.SW_CORNER],[CUBES.EAST,'    ',CUBES.WEST],[CUBES.NE_CORNER,CUBES.NORTH,CUBES.NW_CORNER]],
+        //     [[CUBES.SE_CORNER     ,CUBES.SOUTH,CUBES.SW_CORNER],[CUBES.EAST,'    ',CUBES.WEST],[CUBES.NE_CORNER,CUBES.NORTH,CUBES.NW_CORNER]],
+        //     [[CUBES.SE_CORNER     ,CUBES.SOUTH,CUBES.SW_CORNER],[CUBES.EAST,'    ',CUBES.WEST],[CUBES.NE_CORNER,CUBES.NORTH,CUBES.NW_CORNER]]],
         COTTAGE_LAYOUT : [[[CUBES.SE_CORNER_DOOR,CUBES.SW_CORNER],[CUBES.NE_CORNER,CUBES.NW_CORNER]], [['ww-+','w+-w']]],
+        SAMPLE_BLUEPRINT_LAYOUT : Blueprint.createBuildingFromBlueprint(Blueprint.BLUEPRINTS.SAMPLE),
+        GHOST : [[['    ']]] 
 
     },
 
@@ -341,13 +348,15 @@ const FiveByFive = {
                     const houseY = yinit + (y * 4);
                     
                     // Create house for this position on this floor
-                    blocks.push(...this.createCell(houseX, houseY, floorZ, houseCode, 5, style));
+                    if(houseCode !== '    ') {
+                        blocks.push(...this.createCell(houseX, houseY, floorZ, houseCode, 5, style));
+                    }
                 }
             }
         }
         
         //TODO: Create the roof
-        blocks.push(...this.createRoof(xinit, yinit, xinit + layout.length * 4, yinit + layout[0].length * 4, foundationZ + ((layout.length + 2) * 4), style, "b"));
+        //blocks.push(...this.createRoof(xinit, yinit, xinit + layout.length * 4, yinit + layout[0].length * 4, foundationZ + ((layout.length + 2) * 4), style, "b"));
 
         return blocks;
     },
