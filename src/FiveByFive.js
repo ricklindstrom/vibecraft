@@ -18,9 +18,17 @@ const CUBES = { //SENW
 const FiveByFive = {
 
     BUILDINGS : {
+        FORT_BLUEPRINT_LAYOUT : Blueprint.createBuildingFromBlueprint(Blueprint.BLUEPRINTS.FORT),
+        SAMPLE_BLUEPRINT_LAYOUT : Blueprint.createBuildingFromBlueprint(Blueprint.BLUEPRINTS.SAMPLE),
         TWO_BY_TWO_BLUEPRINT_LAYOUT : Blueprint.createBuildingFromBlueprint(Blueprint.BLUEPRINTS.TWO_BY_TWO),
         THREE_BY_THREE_BLUEPRINT_LAYOUT : Blueprint.createBuildingFromBlueprint(Blueprint.BLUEPRINTS.THREE_BY_THREE),
         TOWER_BLUEPRINT_LAYOUT : Blueprint.createBuildingFromBlueprint(Blueprint.BLUEPRINTS.TOWER),
+        COTTAGE_LAYOUT : [[[CUBES.SE_CORNER_DOOR,CUBES.SW_CORNER],[CUBES.NE_CORNER,CUBES.NW_CORNER]], [['ww-+','w+-w']]],
+        //FOUR : Blueprint.createBuildingFromBlueprint(["444"]),
+        TWO : Blueprint.createBuildingFromBlueprint(["12345"]),
+        THREE : Blueprint.createBuildingFromBlueprint(["54145"]),
+        FIVE : Blueprint.createBuildingFromBlueprint(["555"])
+
          //TWO_BY_TWO_BY_TWO_LAYOUT : [[[CUBES.SE_CORNER_DOOR,CUBES.SW_CORNER],[CUBES.NE_CORNER,CUBES.NW_CORNER]], [['ww++','w++w'],['+ww+','++ww']]],
         // TOWER_LAYOUT : [[['WWWW']],[['WWWW']],[['WWWW']], [['DDDD']], [['DDDD']], [['DDDD']], [['++++']]],
         // BIG_TOWER_LAYOUT : [[['WW++','W++W'],['+WW+','++WW']],
@@ -32,9 +40,7 @@ const FiveByFive = {
         //     [[CUBES.SE_CORNER_DOOR,CUBES.SOUTH,CUBES.SW_CORNER],[CUBES.EAST,'    ',CUBES.WEST],[CUBES.NE_CORNER,CUBES.NORTH,CUBES.NW_CORNER]],
         //     [[CUBES.SE_CORNER     ,CUBES.SOUTH,CUBES.SW_CORNER],[CUBES.EAST,'    ',CUBES.WEST],[CUBES.NE_CORNER,CUBES.NORTH,CUBES.NW_CORNER]],
         //     [[CUBES.SE_CORNER     ,CUBES.SOUTH,CUBES.SW_CORNER],[CUBES.EAST,'    ',CUBES.WEST],[CUBES.NE_CORNER,CUBES.NORTH,CUBES.NW_CORNER]]],
-        COTTAGE_LAYOUT : [[[CUBES.SE_CORNER_DOOR,CUBES.SW_CORNER],[CUBES.NE_CORNER,CUBES.NW_CORNER]], [['ww-+','w+-w']]],
-        SAMPLE_BLUEPRINT_LAYOUT : Blueprint.createBuildingFromBlueprint(Blueprint.BLUEPRINTS.SAMPLE),
-        GHOST : [[['    ']]] 
+
 
     },
 
@@ -53,7 +59,7 @@ const FiveByFive = {
     isBuildable(chunkX, chunkY, x, y) {
         // Only build on even chunks
         if(this.mod(chunkX, 2) !== 0 || this.mod(chunkY, 2) !== 0) return false;
-        
+
         const x1 = x - 5;
         const x2 = x + 5;
         const y1 = y - 5;
@@ -70,8 +76,8 @@ const FiveByFive = {
         if(diff > 7 || lowest < 0) return false;
 
         // Build all over the place for now to debug building generation
-        return true;
-        // return this.random(chunkX, chunkY) > 0.5 && this.random(chunkY, chunkX) > 0.5;
+        //return true;
+         return this.random(chunkX, chunkY) > 0.5 && this.random(chunkY, chunkX) > 0.5;
     },
 
     //Hash-based stable random number between 0 and 1
@@ -83,7 +89,7 @@ const FiveByFive = {
         const styleKeys = Object.keys(Structures.STYLES);
         const hash = Math.abs(((x * 73856093) ^ (y * 19349663))) % styleKeys.length;
         return Structures.STYLES[styleKeys[hash]];
-    }, 
+    },
 
 
     createBuilding(xinit, yinit, xsize = 3, ysize = 3, floors = 3, style = undefined, atrium = 1, initialFloor = 0) {
@@ -96,7 +102,7 @@ const FiveByFive = {
             }
         }
         let cellSize = 4;
-       
+
         //Get the highest point of the terrain around the building
         const h11 = TerrainGenerator.getTerrainHeight(xinit, yinit);
         const h12 = TerrainGenerator.getTerrainHeight(xinit, yinit + ysize * cellSize);
@@ -125,13 +131,13 @@ const FiveByFive = {
 
                     let xdist = Math.min(x, xsize - x - 1);
                     let ydist = Math.min(y, ysize - y - 1);
- 
+
                     //Create a door at the corner of the building on the ground floor
                     if(x== 0 && y == 0 && f==0) {
                         blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "dw++", cellSize, style));
                         continue
                     }
-                    
+
                     if(x == 0) {
                         blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "+w+ ", cellSize, style));
                     }
@@ -190,8 +196,8 @@ const FiveByFive = {
                     //     if(y == ysize-1) {
                     //         blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "  b ", cellSize, style));
                     //     }
-                    // }        
-                    
+                    // }
+
                 }
             }
         }
@@ -214,7 +220,7 @@ const FiveByFive = {
         }
         let cellSize = 4;
 
-       
+
         //Get the highest point of the terrain around the building
         const h11 = TerrainGenerator.getTerrainHeight(xinit, yinit);
         const h12 = TerrainGenerator.getTerrainHeight(xinit, yinit + ycells * cellSize);
@@ -243,7 +249,7 @@ const FiveByFive = {
 
                     let xdist = Math.min(x, xsize - x - 1);
                     let ydist = Math.min(y, ysize - y - 1);
- 
+
                     if(x== 0 && y == 0 && f==0) {
                         blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), "dw++", cellSize, style));
                         continue
@@ -260,7 +266,7 @@ const FiveByFive = {
                     if(y == ycells-1) {
                         blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), foundationZ + (f * cellSize), " +w+", cellSize, style));
                     }
-                    
+
                 }
             }
         }
@@ -297,7 +303,7 @@ const FiveByFive = {
                     blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), z, " " + roofType + "  ", cellSize, style));
                 }
                 if(y == 0) {
-                    blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), z, roofType + "   ", cellSize, style)); 
+                    blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), z, roofType + "   ", cellSize, style));
                 }
                 if(x == xsize-1) {
                     blocks.push(...this.createCell(xinit + (x * cellSize), yinit + (y * cellSize), z, "   " + roofType, cellSize, style));
@@ -309,9 +315,9 @@ const FiveByFive = {
         }
         return blocks;
     },
- 
+
     getRandomBuildingLayout(x, y) {
-        const layoutKeys = Object.keys(this.BUILDINGS);        
+        const layoutKeys = Object.keys(this.BUILDINGS);
         const hash = Math.abs((x * 11 + y * 13));
         const index = hash % layoutKeys.length;
         return this.BUILDINGS[layoutKeys[index]];
@@ -319,10 +325,13 @@ const FiveByFive = {
 
     createHouseFromLayout(xinit, yinit, layout, style=Structures.STYLES.TUDOR) {
         const blocks = [];
-        
+
         if(!layout) {
             layout = this.getRandomBuildingLayout(xinit, yinit);
         }
+
+        //TEMP Override
+        style = this.getRandomStyle(xinit, yinit);
 
         //FIXME
         const h11 = TerrainGenerator.getTerrainHeight(xinit, yinit);
@@ -339,22 +348,25 @@ const FiveByFive = {
         for(let floor = 0; floor < layout.length; floor++) {
             const floorLayout = layout[floor];
             const floorZ = foundationZ + (floor * 4);
-            
+
             // Loop through X and Y positions within each floor
             for(let y = 0; y < floorLayout.length; y++) {
                 for(let x = 0; x < floorLayout[y].length; x++) {
                     const houseCode = floorLayout[y][x];
                     const houseX = xinit + (x * 4);
                     const houseY = yinit + (y * 4);
-                    
-                    // Create house for this position on this floor
-                    if(houseCode !== '    ') {
+
+                    if(houseCode == '____') {
+                        //Create floor here
+                        blocks.push(...Structures.createFloor(houseX - 1, houseY - 1, houseX + 3 + 1, houseY + 3 + 1, floorZ, style));
+                    } else if(houseCode !== '    ') {
+                        // Create house for this position on this floor
                         blocks.push(...this.createCell(houseX, houseY, floorZ, houseCode, 5, style));
                     }
                 }
             }
         }
-        
+
         //TODO: Create the roof
         //blocks.push(...this.createRoof(xinit, yinit, xinit + layout.length * 4, yinit + layout[0].length * 4, foundationZ + ((layout.length + 2) * 4), style, "b"));
 
@@ -409,7 +421,7 @@ const FiveByFive = {
             if(["W", "w", "D", "d", "+"].includes(code[1])) {
                 blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + size - 1, style.pillar));
             }
-            if(["W", "w", "D", "d", "+"].includes(code[2])) {    
+            if(["W", "w", "D", "d", "+"].includes(code[2])) {
                 blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + size - 1, style.pillar));
             }
             if(["W", "w", "D", "d", "+"].includes(code[3])) {
@@ -483,7 +495,7 @@ const FiveByFive = {
             }
             if(![" "].includes(code[1])) {
                 blocks.push(...Structures.createPillar(x2, y1, foundationZ, foundationZ + size - 1, style.trim));
-            }   
+            }
             if(![" "].includes(code[2])) {
                 blocks.push(...Structures.createPillar(x2, y2, foundationZ, foundationZ + size - 1, style.trim));
             }
@@ -602,4 +614,4 @@ if (typeof window !== 'undefined') {
     window.Houses = Houses;
 } else {
     module.exports = Houses;
-} 
+}

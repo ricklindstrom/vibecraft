@@ -52,4 +52,6 @@ A vibe-coded browser-based minecraft-inspired world generator playground. Built 
 1. Open index.html in a browser
 2. Enjoy
 
-The game displays control hints in the top-left corner during gameplay. 
+The game displays control hints in the top-left corner during gameplay.
+
+This project is licensed under MIT, with additional DNTAI 'Do Not Train' terms (see LICENSE-DNTAI). 

@@ -30,7 +30,7 @@
  - [ ] LOD: Don't evict chunks for dropping one LOD level
  - [ ] POLISH: Add detail to blocks.
  - [ ] TERRAIN CALC: Add proper smoothing to spline function.
- - [ ] STRUCTURES: Add castles.
+ - [X] STRUCTURES: Add castles.
  - [ ] STRUCTURES: Add roads.
  - [ ] TERRAIN CALC + STRUCTURES: Add terrain rating score for home building to identify good locations for building houses/castles. (Flat near water? Tops of hills?)
  - [ ] POLISH: Add cloud layer

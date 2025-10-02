@@ -8,6 +8,14 @@ const Blueprint = {
             "0334430",
             "0434434",
         ],
+        FORT : [
+            "311112211113",
+            "100002200001",
+            "100044440001",
+            "100044440001",
+            "100000000001",
+            "311120211113"
+        ],
         TWO_BY_TWO: [ "22", "22" ],
         THREE_BY_THREE: [ "333", "333", "333" ],
         TOWER: ["4"],
@@ -52,6 +60,8 @@ const Blueprint = {
                     if (floor < storiesAtCell) {
                         const cellCode = this.getCellCode(x, y, width, height, floor, storiesAtCell, blueprint);
                         row.push(cellCode);
+                    } else if (floor == 0 && storiesAtCell == 0) {
+                        row.push('____'); //TESTING
                     } else {
                         // No building at this height
                         row.push('    '); // Empty space

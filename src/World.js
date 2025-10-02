@@ -221,9 +221,9 @@ class World {
 
     getLODLevel(distance) {
         if (distance <= this.LOD_LEVELS.FULL.maxDistance) return this.LOD_LEVELS.FULL;
-        if (distance <= this.LOD_LEVELS.HIGH.maxDistance) return this.LOD_LEVELS.HIGH;
+        //if (distance <= this.LOD_LEVELS.HIGH.maxDistance) return this.LOD_LEVELS.HIGH;
         if (distance <= this.LOD_LEVELS.MEDIUM.maxDistance) return this.LOD_LEVELS.MEDIUM;
-        if (distance <= this.LOD_LEVELS.LOW.maxDistance) return this.LOD_LEVELS.LOW;
+        //if (distance <= this.LOD_LEVELS.LOW.maxDistance) return this.LOD_LEVELS.LOW;
         if (distance <= this.LOD_LEVELS.MINIMAL.maxDistance) return this.LOD_LEVELS.MINIMAL;
         return this.LOD_LEVELS.MINIMAL;
     }
@@ -566,11 +566,11 @@ class World {
         const centerY = chunkY * this.CHUNK_SIZE + this.CHUNK_SIZE / 2;
         if(FiveByFive.isBuildable(chunkX, chunkY, centerX, centerY)) {
             let houseBlocks = [];
-            if(this.random(centerX, centerY) > 0.7) {
+            if(this.random(centerX, centerY) > 0.6) {
                  houseBlocks = FiveByFive.createHouseFromLayout(centerX, centerY);
             } else if(this.random(centerX, centerY) > 0.5) {
                 houseBlocks = FiveByFive.createHouse(centerX, centerY);
-            } else if(this.random(centerX, centerY) > 0.25) {
+            } else if(this.random(centerX, centerY) > 0.4) {
                 houseBlocks = FiveByFive.createBuilding(centerX, centerY, 8, 8, 5);
             } else {
                 houseBlocks = Houses.createHouse(centerX, centerY);

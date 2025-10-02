@@ -54,6 +54,7 @@ const TerrainGenerator = {
     },
 
     continentalnessNoise(x, y) {
+        //return 0; // TEMP DEBUG
         const value = this.simpleNoise(x, y, 0.005, 1);
         return value;
     },
@@ -63,12 +64,29 @@ const TerrainGenerator = {
     },
 
     getTerrainDetail(x, y) {
-        const cont = this.continentalnessNoise(x, y);
-        let baseHeight = this.splineMap(cont) * this.amplitude;
+        //const cont = this.continentalnessNoise(x, y);
+        //let baseHeight = this.splineMap(cont) * 20;
+        let baseHeight = 20 * this.amplitude;
         let detail = 0;
-        detail += this.simpleNoise(x, y, 0.02, 8 * this.amplitude);
-        detail += this.simpleNoise(x, y, 0.05, 4 * this.amplitude);
-        detail += this.simpleNoise(x, y, 0.1, 2 * this.amplitude);
+        
+        // Generate terrain detail with proper octave scaling
+        const numOctaves = 5;
+        const baseFrequency = 0.01;
+        const baseAmplitude = 16 * this.amplitude;
+        
+        for (let i = 0; i < numOctaves; i++) {
+            const frequency = baseFrequency * Math.pow(2, i);
+            const amplitude = baseAmplitude * Math.pow(0.5, i);
+            detail += this.simpleNoise(x, y, frequency, amplitude);
+        }
+        
+        // Create flatness mask - low values = flatter terrain
+        const flatnessNoise = this.simpleNoise(x, y, 0.03, 1); // Low frequency for large flat areas
+        const flatnessFactor = Math.max(0.1, (flatnessNoise + 1) / 2); // 0.1 to 1.0
+        
+        // Apply flatness mask to detail - areas with low flatnessFactor become very flat
+        detail *= flatnessFactor;
+        
         return baseHeight + detail;
     }
 };
